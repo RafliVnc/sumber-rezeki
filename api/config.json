@@ -1,0 +1,38 @@
+{
+  "app": {
+    "name": "api"
+  },
+  "web": {
+    "prefork": false,
+    "port": 8080
+  },
+  "log": {
+    "level": 6
+  },
+  "database": {
+    "username": "rafli",
+    "password": "P@ssw0rd",
+    "host": "localhost",
+    "port": 54320,
+    "name": "first_go_app",
+    "pool": {
+      "idle": 10,
+      "max": 100,
+      "lifetime": 300
+    }
+  },
+  "testing": {
+    "database": {
+      "username": "rafli",
+      "password": "P@ssw0rd",
+      "host": "localhost",
+      "port": 54320,
+      "name": "first_go_app_test",
+      "pool": {
+        "idle": 10,
+        "max": 100,
+        "lifetime": 300
+      }
+    }
+  }
+}

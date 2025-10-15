@@ -1,0 +1,30 @@
+### Register new user
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "name": "Rafli",
+  "email": "rafli13@mail.com",
+  "password": "123456"
+}
+
+### Find users with pagination
+GET http://localhost:3000/api/users?page=1&perPage=10
+Accept: application/json
+
+### Find all users 
+GET http://localhost:3000/api/users?
+Accept: application/json
+
+
+### Update User 
+PUT http://localhost:3000/api/users/13
+Content-Type: application/json
+
+{
+  "name": "Rafli 13",
+  "email": "rafli13@mail.com"
+}
+
+### Delete user
+DELETE http://localhost:3000/api/users/111
