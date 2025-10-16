@@ -2,9 +2,11 @@ package config
 
 import (
 	"api/internal/delivery/http"
+	"api/internal/delivery/http/middleware"
 	"api/internal/delivery/http/route"
 	"api/internal/repository"
 	"api/internal/usecase"
+	"api/internal/utils"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -22,15 +24,25 @@ type BootstrapConfig struct {
 }
 
 func Bootstrap(config *BootstrapConfig) {
+	utils.InitValidator()
+	tokenUtil := utils.NewTokenUtil("testSecret")
 
 	//user
 	userRepository := repository.NewUserRepository(config.Log)
-	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validate, userRepository)
+	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validate, userRepository, tokenUtil)
 	userController := http.NewUserController(userUseCase, config.Log)
+
+	// redisClient := redis.NewClient(&redis.Options{
+	// 	Addr: "localhost:6379",
+	// 	DB:   0,
+	// })
+
+	authMiddleware := middleware.NewAuth(userUseCase, tokenUtil)
 
 	routeConfig := route.RouteConfig{
 		App:            config.App,
 		UserController: userController,
+		AuthMiddleware: authMiddleware,
 	}
 
 	routeConfig.Setup()

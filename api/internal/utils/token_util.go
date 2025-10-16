@@ -3,21 +3,22 @@ package utils
 import (
 	"api/internal/model"
 	"context"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/redis/go-redis/v9"
-	"time"
+	"github.com/google/uuid"
 )
 
 type TokenUtil struct {
 	SecretKey string
-	Redis     *redis.Client
+	// Redis     *redis.Client
 }
 
-func NewTokenUtil(secretKey string, redisClient *redis.Client) *TokenUtil {
+func NewTokenUtil(secretKey string) *TokenUtil {
 	return &TokenUtil{
 		SecretKey: secretKey,
-		Redis:     redisClient,
+		// Redis:     redisClient,
 	}
 }
 
@@ -32,10 +33,10 @@ func (t TokenUtil) CreateToken(ctx context.Context, auth *model.Auth) (string, e
 		return "", err
 	}
 
-	_, err = t.Redis.SetEx(ctx, jwtToken, auth.ID, time.Hour*25*30).Result()
-	if err != nil {
-		return "", err
-	}
+	// _, err = t.Redis.SetEx(ctx, jwtToken, auth.ID, time.Hour*25*30).Result()
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	return jwtToken, nil
 }
@@ -55,18 +56,18 @@ func (t TokenUtil) ParseToken(ctx context.Context, jwtToken string) (*model.Auth
 		return nil, fiber.ErrUnauthorized
 	}
 
-	result, err := t.Redis.Exists(ctx, jwtToken).Result()
-	if err != nil {
-		return nil, err
-	}
+	// result, err := t.Redis.Exists(ctx, jwtToken).Result()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	if result == 0 {
-		return nil, fiber.ErrUnauthorized
-	}
+	// if result == 0 {
+	// 	return nil, fiber.ErrUnauthorized
+	// }
 
 	id := claims["id"].(string)
 	auth := &model.Auth{
-		ID: id,
+		ID: uuid.MustParse(id),
 	}
 	return auth, nil
 }

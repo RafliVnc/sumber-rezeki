@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -20,6 +21,7 @@ type UserUseCase interface {
 	Create(ctx context.Context, request *model.RegisterUserRequest) (*model.UserResponse, error)
 	FindAll(ctx context.Context, request *model.FindAllUserRequest) ([]model.UserResponse, int64, error)
 	Update(ctx context.Context, request *model.UpdateUserRequest) (*model.UserResponse, error)
+	Login(ctx context.Context, request *model.LoginUserRequest) (*model.LoginUserResponse, error)
 	Delete(ctx context.Context, request *model.DeleteUserRequest) error
 }
 
@@ -28,15 +30,17 @@ type UserUseCaseImpl struct {
 	Log            *logrus.Logger
 	Validate       *validator.Validate
 	UserRepository repository.UserRepository
+	TokenUtil      *utils.TokenUtil
 }
 
 func NewUserUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate,
-	userRepository repository.UserRepository) *UserUseCaseImpl {
+	userRepository repository.UserRepository, tokenUtil *utils.TokenUtil) *UserUseCaseImpl {
 	return &UserUseCaseImpl{
 		DB:             db,
 		Log:            logger,
 		Validate:       validate,
 		UserRepository: userRepository,
+		TokenUtil:      tokenUtil,
 	}
 }
 
@@ -51,18 +55,20 @@ func (s *UserUseCaseImpl) Create(ctx context.Context, request *model.RegisterUse
 		return nil, model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
 	}
 
-	//check email
-	count, err := s.UserRepository.CountByEmail(tx, request.Email)
+	//check username
+	count, err := s.UserRepository.CountByUsername(tx, request.Username)
 	if err != nil {
-		s.Log.Warnf("Failed check email to database : %+v", err)
+		s.Log.Warnf("Failed check username to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
 	if count > 0 {
-		s.Log.Warnf("Email already exists : %s", request.Email)
-		errorMessage := fmt.Sprintf("Email %s already exists", request.Email)
+		s.Log.Warnf("Username already exists : %s", request.Username)
+		errorMessage := fmt.Sprintf("Username %s already exists", request.Username)
 		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
 	}
+
+	// TODO: CHECK PHONE
 
 	//encript password
 	password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
@@ -73,9 +79,12 @@ func (s *UserUseCaseImpl) Create(ctx context.Context, request *model.RegisterUse
 
 	//set user
 	user := &entity.User{
-		Email:    request.Email,
+		ID:       uuid.New(),
+		Username: request.Username,
 		Password: string(password),
 		Name:     request.Name,
+		Role:     request.Role,
+		Phone:    request.Phone,
 	}
 
 	if err := s.UserRepository.Create(tx, user); err != nil {
@@ -86,8 +95,8 @@ func (s *UserUseCaseImpl) Create(ctx context.Context, request *model.RegisterUse
 	//commit
 	if err := tx.Commit().Error; err != nil {
 		s.Log.WithFields(logrus.Fields{
-			"email": request.Email,
-			"name":  request.Name,
+			"username": request.Username,
+			"name":     request.Name,
 		}).Warnf("Failed commit to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
@@ -129,24 +138,24 @@ func (s *UserUseCaseImpl) Update(ctx context.Context, request *model.UpdateUserR
 		return nil, model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
 	}
 
-	//check email
-	count, err := s.UserRepository.CheckEmailUniqueness(tx, request.Email, request.ID)
+	//check username
+	count, err := s.UserRepository.CheckUsernameUniqueness(tx, request.Username, request.ID)
 	if err != nil {
-		s.Log.Warnf("Failed check email to database : %+v", err)
+		s.Log.Warnf("Failed check username to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
 	if count > 0 {
-		s.Log.Warnf("Email already exists : %s", request.Email)
-		errorMessage := fmt.Sprintf("Email %s already exists", request.Email)
+		s.Log.Warnf("Username already exists : %s", request.Username)
+		errorMessage := fmt.Sprintf("Username %s already exists", request.Username)
 		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
 	}
 
 	//set user
 	user := &entity.User{
-		ID:    request.ID,
-		Email: request.Email,
-		Name:  request.Name,
+		ID:       request.ID,
+		Username: request.Username,
+		Name:     request.Name,
 	}
 
 	if err := s.UserRepository.Update(tx, user); err != nil {
@@ -157,8 +166,8 @@ func (s *UserUseCaseImpl) Update(ctx context.Context, request *model.UpdateUserR
 	//commit
 	if err := tx.Commit().Error; err != nil {
 		s.Log.WithFields(logrus.Fields{
-			"email": request.Email,
-			"name":  request.Name,
+			"username": request.Username,
+			"name":     request.Name,
 		}).Warnf("Failed commit to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
@@ -203,4 +212,59 @@ func (s *UserUseCaseImpl) Delete(ctx context.Context, request *model.DeleteUserR
 	}
 
 	return nil
+}
+
+func (s *UserUseCaseImpl) Login(ctx context.Context, request *model.LoginUserRequest) (*model.LoginUserResponse, error) {
+	tx := s.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	//check request validation
+	details, errorMessage, err := utils.ValidateStruct(request)
+	if err != nil {
+		s.Log.Warnf("Failed to validate request: %+v", details)
+		return nil, model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
+	}
+
+	user, err := s.UserRepository.FindByUsername(tx, request.Username)
+	if err != nil {
+		s.Log.Warnf("Failed find user by username : %+v", err)
+		return nil, fiber.ErrUnauthorized
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
+		s.Log.Warnf("Failed compare password : %+v", err)
+		return nil, fiber.ErrUnauthorized
+	}
+
+	token, err := s.TokenUtil.CreateToken(ctx, &model.Auth{ID: user.ID})
+	if err != nil {
+		s.Log.Warnf("Failed to create token : %+v", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	return converter.UserToTokenResponse(user, token), nil
+}
+
+func (s *UserUseCaseImpl) Verify(ctx context.Context, request *model.Auth) (*model.Auth, error) {
+	tx := s.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	err := s.Validate.Struct(request)
+	if err != nil {
+		s.Log.Warnf("Invalid request body : %+v", err)
+		return nil, fiber.ErrBadRequest
+	}
+
+	user, err := s.UserRepository.FindById(tx, request.ID)
+	if err != nil {
+		s.Log.Warnf("Failed find user by username : %+v", err)
+		return nil, fiber.ErrUnauthorized
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		s.Log.Warnf("Failed commit transaction : %+v", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	return &model.Auth{ID: user.ID}, nil
 }

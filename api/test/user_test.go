@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -21,7 +20,7 @@ func TestRegister(t *testing.T) {
 	defer ClearAll()
 	requestBody := model.RegisterUserRequest{
 		Name:     "Rafli",
-		Email:    "rafli@gmail.com",
+		Username: "rafli@gmail.com",
 		Password: "rahasia",
 	}
 
@@ -44,7 +43,7 @@ func TestRegister(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, requestBody.Name, responseBody.Data.Name)
-	assert.Equal(t, requestBody.Email, responseBody.Data.Email)
+	assert.Equal(t, requestBody.Username, responseBody.Data.Username)
 	assert.NotNil(t, responseBody.Data.ID)
 }
 
@@ -99,14 +98,14 @@ func TestUpdate(t *testing.T) {
 	user := CreateUsers(1)[0]
 
 	requestBody := model.UpdateUserRequest{
-		Name:  "Rafli edit",
-		Email: "rafli999@gmail.com",
+		Name:     "Rafli edit",
+		Username: "rafli999@gmail.com",
 	}
 
 	bodyJson, err := json.Marshal(requestBody)
 	assert.Nil(t, err)
 
-	request := httptest.NewRequest(http.MethodPut, "/api/users/"+strconv.Itoa(user.ID), strings.NewReader(string(bodyJson)))
+	request := httptest.NewRequest(http.MethodPut, "/api/users/"+user.ID.String(), strings.NewReader(string(bodyJson)))
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 
@@ -123,14 +122,14 @@ func TestUpdate(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, user.ID, responseBody.Data.ID)
 	assert.Equal(t, requestBody.Name, responseBody.Data.Name)
-	assert.Equal(t, requestBody.Email, responseBody.Data.Email)
+	assert.Equal(t, requestBody.Username, responseBody.Data.Username)
 }
 
 func TestDelete(t *testing.T) {
 	defer ClearAll()
 	user := CreateUsers(1)[0]
 
-	request := httptest.NewRequest(http.MethodDelete, "/api/users/"+strconv.Itoa(user.ID), nil)
+	request := httptest.NewRequest(http.MethodDelete, "/api/users/"+user.ID.String(), nil)
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 

@@ -22,7 +22,7 @@ func CreateUsers(total int) []entity.User {
 	for i := 0; i < total; i++ {
 		user := &entity.User{
 			Name:     "rafli",
-			Email:    "rafli" + strconv.Itoa(i) + "@gmail.com",
+			Username: "rafli" + strconv.Itoa(i) + "@gmail.com",
 			Password: "rahasia",
 		}
 		err := db.Create(user).Error

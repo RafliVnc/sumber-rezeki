@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -38,13 +39,31 @@ func (c *UserController) Register(ctx *fiber.Ctx) error {
 	return ctx.JSON(model.WebResponse[*model.UserResponse]{Data: response})
 }
 
+func (c *UserController) Login(ctx *fiber.Ctx) error {
+
+	request := new(model.LoginUserRequest)
+	err := ctx.BodyParser(request)
+	if err != nil {
+		c.Log.Warnf("Failed to parse request body : %+v", err)
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+
+	response, err := c.UserUseCase.Login(ctx.UserContext(), request)
+	if err != nil {
+		c.Log.Warnf("Failed to login user : %+v", err)
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[*model.LoginUserResponse]{Data: response})
+}
+
 func (c *UserController) FindAll(ctx *fiber.Ctx) error {
 
 	request := &model.FindAllUserRequest{
-		Page:    ctx.QueryInt("page"),
-		PerPage: ctx.QueryInt("perPage"),
-		Name:    ctx.Query("name"),
-		Email:   ctx.Query("email"),
+		Page:     ctx.QueryInt("page"),
+		PerPage:  ctx.QueryInt("perPage"),
+		Name:     ctx.Query("name"),
+		Username: ctx.Query("username"),
 	}
 
 	response, total, err := c.UserUseCase.FindAll(ctx.UserContext(), request)
@@ -77,7 +96,15 @@ func (c *UserController) Update(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
 
-	request.ID, _ = ctx.ParamsInt("id")
+	idParam := ctx.Params("id")
+
+	id, err := uuid.Parse(idParam)
+	if err != nil {
+		c.Log.WithError(err).Error("error parsing user ID from URL")
+		return fiber.NewError(fiber.StatusBadRequest, "invalid user ID")
+	}
+
+	request.ID = id
 
 	response, err := c.UserUseCase.Update(ctx.UserContext(), request)
 	if err != nil {
@@ -89,7 +116,9 @@ func (c *UserController) Update(ctx *fiber.Ctx) error {
 }
 
 func (c *UserController) Delete(ctx *fiber.Ctx) error {
-	id, err := ctx.ParamsInt("id")
+	idParam := ctx.Params("id")
+
+	id, err := uuid.Parse(idParam)
 	if err != nil {
 		c.Log.WithError(err).Error("error parsing user ID from URL")
 		return fiber.NewError(fiber.StatusBadRequest, "invalid user ID")

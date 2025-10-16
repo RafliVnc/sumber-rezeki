@@ -14,7 +14,7 @@
     "password": "P@ssw0rd",
     "host": "localhost",
     "port": 54320,
-    "name": "first_go_app",
+    "name": "sumber_rezeki",
     "pool": {
       "idle": 10,
       "max": 100,
@@ -27,7 +27,7 @@
       "password": "P@ssw0rd",
       "host": "localhost",
       "port": 54320,
-      "name": "first_go_app_test",
+      "name": "sumber_rezeki_test",
       "pool": {
         "idle": 10,
         "max": 100,

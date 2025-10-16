@@ -1,30 +1,43 @@
 ### Register new user
-POST http://localhost:3000/api/users
+POST http://localhost:8080/api/users
 Content-Type: application/json
 
 {
   "name": "Rafli",
-  "email": "rafli13@mail.com",
-  "password": "123456"
+  "username": "rafli13@mail.co",
+  "password": "123456",
+  "phone":"081273737777",
+  "role":"SUPER_ADMIN"
 }
 
 ### Find users with pagination
-GET http://localhost:3000/api/users?page=1&perPage=10
+GET http://localhost:8080/api/users?page=1&perPage=10
 Accept: application/json
 
 ### Find all users 
-GET http://localhost:3000/api/users?
+GET http://localhost:8080/api/users?
 Accept: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjMyMzE0OTAzODQsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.wraxAoyZRygNkE6yFu5EUo_glQGj0KkLqVCz5M9CRu0
 
 
 ### Update User 
-PUT http://localhost:3000/api/users/13
+PUT http://localhost:8080/api/users/13
 Content-Type: application/json
 
 {
   "name": "Rafli 13",
-  "email": "rafli13@mail.com"
+  "username": "rafli13@mail.com"
 }
 
 ### Delete user
-DELETE http://localhost:3000/api/users/111
+DELETE http://localhost:8080/api/users/111
+
+
+### Login new user
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "username": "rafli13@mail.com",
+  "password": "123456"
+}

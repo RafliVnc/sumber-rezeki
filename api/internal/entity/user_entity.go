@@ -1,10 +1,18 @@
 package entity
 
+import (
+	"api/internal/entity/enum"
+
+	"github.com/google/uuid"
+)
+
 type User struct {
-	ID       int    `gorm:"column:id;primaryKey;autoIncrement"`
-	Name     string `gorm:"column:name"`
-	Email    string `gorm:"column:email"`
-	Password string `gorm:"column:password"`
+	ID       uuid.UUID     `gorm:"type:uuid;primaryKey"`
+	Name     string        `gorm:"column:name"`
+	Username string        `gorm:"column:username"`
+	Phone    string        `gorm:"column:phone"`
+	Role     enum.UserRole `gorm:"type:user_role;column:role;not null"`
+	Password string        `gorm:"column:password"`
 }
 
 func (u *User) TableName() string {

@@ -9,9 +9,23 @@ import (
 type RouteConfig struct {
 	App            *fiber.App
 	UserController *http.UserController
+	AuthMiddleware fiber.Handler
 }
 
 func (c *RouteConfig) Setup() {
+	c.SetupGuestRoute()
+	c.SetupAuthRoute()
+}
+
+func (c *RouteConfig) SetupGuestRoute() {
+	// todo create login user
+	c.App.Post("/api/login", c.UserController.Login)
+	c.App.Post("/api/users", c.UserController.Register)
+}
+
+func (c *RouteConfig) SetupAuthRoute() {
+	c.App.Use(c.AuthMiddleware)
+
 	//user
 	c.App.Get("/api/users", c.UserController.FindAll)
 	c.App.Post("/api/users", c.UserController.Register)

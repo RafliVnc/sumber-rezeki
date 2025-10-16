@@ -2,12 +2,23 @@ package utils
 
 import (
 	"api/internal/model"
+	"api/internal/utils/validation"
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
 )
 
 var validate = validator.New()
+
+// GetValidator create instance validator
+func GetValidator() *validator.Validate {
+	return validate
+}
+
+// InitValidator:call all custom validator
+func InitValidator() {
+	validation.RegisterUserRoleValidation(validate)
+}
 
 func ValidateStruct(s interface{}) ([]model.ErrorDetails, string, error) {
 	err := validate.Struct(s)
@@ -37,6 +48,8 @@ func ConvertTagToMessage(tag string, param string) string {
 		return fmt.Sprintf("This field must not exceed %s characters.", param)
 	case "len":
 		return fmt.Sprintf("This field must have exactly %s characters.", param)
+	case "userrole":
+		return "Invalid role Type."
 	default:
 		return fmt.Sprintf("Invalid value for this field: %s", tag)
 	}

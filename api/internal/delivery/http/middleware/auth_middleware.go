@@ -25,8 +25,14 @@ func NewAuth(userUseCase *usecase.UserUseCaseImpl, tokenUtil *utils.TokenUtil) f
 			return fiber.ErrUnauthorized
 		}
 
+		userAuth, err := userUseCase.Verify(ctx.UserContext(), &model.Auth{ID: auth.ID})
+		if err != nil {
+			userUseCase.Log.Warnf("Failed find user by token : %+v", err)
+			return fiber.ErrUnauthorized
+		}
+
 		userUseCase.Log.Debugf("User : %+v", auth.ID)
-		ctx.Locals("auth", auth)
+		ctx.Locals("auth", userAuth)
 		return ctx.Next()
 	}
 }
