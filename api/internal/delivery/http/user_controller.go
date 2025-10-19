@@ -135,3 +135,15 @@ func (c *UserController) Delete(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(model.WebResponse[bool]{Data: true})
 }
+
+func (c *UserController) Current(ctx *fiber.Ctx) error {
+	request := &model.VerifyUserRequest{Token: ctx.Get("Authorization", "NOT_FOUND")}
+
+	response, err := c.UserUseCase.Current(ctx.UserContext(), request.Token)
+	if err != nil {
+		c.Log.WithError(err).Error("error getting user")
+		return fiber.ErrUnauthorized
+	}
+
+	return ctx.JSON(model.WebResponse[*model.UserResponse]{Data: response})
+}

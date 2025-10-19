@@ -41,6 +41,7 @@ func Bootstrap(config *BootstrapConfig) {
 
 	routeConfig := route.RouteConfig{
 		App:            config.App,
+		Config:         config.Config,
 		UserController: userController,
 		AuthMiddleware: authMiddleware,
 	}

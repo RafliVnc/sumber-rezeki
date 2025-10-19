@@ -23,6 +23,8 @@ type UserUseCase interface {
 	Update(ctx context.Context, request *model.UpdateUserRequest) (*model.UserResponse, error)
 	Login(ctx context.Context, request *model.LoginUserRequest) (*model.LoginUserResponse, error)
 	Delete(ctx context.Context, request *model.DeleteUserRequest) error
+	Verify(ctx context.Context, request *model.Auth) (*model.Auth, error)
+	Current(ctx context.Context, jwtToken string) (*model.UserResponse, error)
 }
 
 type UserUseCaseImpl struct {
@@ -267,4 +269,23 @@ func (s *UserUseCaseImpl) Verify(ctx context.Context, request *model.Auth) (*mod
 	}
 
 	return &model.Auth{ID: user.ID}, nil
+}
+
+func (s *UserUseCaseImpl) Current(ctx context.Context, jwtToken string) (*model.UserResponse, error) {
+	tx := s.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	token, err := s.TokenUtil.ParseToken(ctx, jwtToken)
+	if err != nil {
+		s.Log.Warnf("Failed to parse token : %+v", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	user, err := s.UserRepository.FindById(tx, token.ID)
+	if err != nil {
+		s.Log.Warnf("Failed find user by username : %+v", err)
+		return nil, fiber.ErrUnauthorized
+	}
+
+	return converter.ToUserResponse(user), nil
 }

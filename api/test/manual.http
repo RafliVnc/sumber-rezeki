@@ -41,3 +41,8 @@ Content-Type: application/json
   "username": "rafli13@mail.com",
   "password": "123456"
 }
+
+### Current User
+GET http://localhost:8080/api/current?
+Accept: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjMyMzE0OTAzODQsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.wraxAoyZRygNkE6yFu5EUo_glQGj0KkLqVCz5M9CRu0

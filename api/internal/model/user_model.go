@@ -50,7 +50,7 @@ type FindAllUserRequest struct {
 }
 
 type VerifyUserRequest struct {
-	Token string `validate:"required,max=100"`
+	Token string `validate:"required,max=200"`
 }
 
 type VerifyTokenRequest struct {

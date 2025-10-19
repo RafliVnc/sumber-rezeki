@@ -34,5 +34,8 @@
         "lifetime": 300
       }
     }
+  },
+  "cors": {
+    "CORS_ALLOW_ORIGINS": "http://localhost:3000"
   }
 }
