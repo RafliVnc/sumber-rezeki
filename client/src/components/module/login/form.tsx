@@ -81,7 +81,12 @@ export default function form() {
             <FormItem>
               <FormLabel>Username/ No Handphone</FormLabel>
               <FormControl>
-                <Input placeholder="Username/ No Handphone" {...field} />
+                <Input
+                  type="email"
+                  autoComplete="username"
+                  placeholder="Username/ No Handphone"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -94,7 +99,12 @@ export default function form() {
             <FormItem>
               <FormLabel>Kata Sandi</FormLabel>
               <FormControl>
-                <InputPassword placeholder="Kata Sandi" {...field} />
+                <InputPassword
+                  type="password"
+                  placeholder="Kata Sandi"
+                  autoComplete="current-password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

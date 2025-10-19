@@ -5,15 +5,18 @@ import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
+import { toast } from "sonner";
 
 type AuthContextType = {
   user: User;
   setUser: (value: User) => void;
+  logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: UserDummy,
   setUser: (_value: User) => {},
+  logout: () => {},
 });
 
 const AppProvider = ({ children }: { children: React.ReactNode }) => {
@@ -25,6 +28,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
+          Cookies.set("token", token, { expires: 1 });
           const res = await api<{ data: User }>({
             url: "current",
             method: "GET",
@@ -46,6 +50,14 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
     fetchUser();
   }, []);
 
+  const logout = () => {
+    localStorage.removeItem("token");
+    Cookies.remove("token");
+    setUser(UserDummy);
+    toast.success("Anda telah keluar dari akun ini");
+    router.push("/login");
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -53,6 +65,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
         setUser: (value: User) => {
           setUser(value);
         },
+        logout,
       }}
     >
       {children}
