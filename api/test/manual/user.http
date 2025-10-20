@@ -1,0 +1,44 @@
+### Login user
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "username": "superadmin",
+  "password": "123456"
+}
+
+### Find users with pagination
+GET http://localhost:8080/api/users?page=1&perPage=10
+Accept: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjM1Njk0MDkxOTksImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.O-9e1AhhgJ_zgZv7jep2rJ7RAedjw5P0XAmiuAPb3vU
+
+### Create new user
+POST http://localhost:8080/api/users
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjM1Njk0MDkxOTksImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.O-9e1AhhgJ_zgZv7jep2rJ7RAedjw5P0XAmiuAPb3vU
+
+{
+  "name": "Test Manual",
+  "username": "manual",
+  "password": "123456",
+  "phone":"081273737777",
+  "role":"SUPER_ADMIN"
+}
+
+### Upadte new user
+PUT http://localhost:8080/api/users/3fac46fc-15ae-49af-b4b4-4cad48bca1af
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjM1Njk0MDkxOTksImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.O-9e1AhhgJ_zgZv7jep2rJ7RAedjw5P0XAmiuAPb3vU
+
+{
+  "name": "Test Manual",
+  "username": "manual",
+  "password": "123456",
+  "phone":"081273737777",
+  "role":"OWNER"
+}
+
+### Current User
+GET http://localhost:8080/api/current
+Accept: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjM1Njk0MDkxOTksImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.O-9e1AhhgJ_zgZv7jep2rJ7RAedjw5P0XAmiuAPb3vU

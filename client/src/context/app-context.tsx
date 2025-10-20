@@ -39,7 +39,9 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (err) {
           console.error(err);
           // token invalid
-          localStorage.removeItem("token");
+          if (err instanceof Error && err.message === "Unauthorized") {
+            localStorage.removeItem("token");
+          }
           setUser(UserDummy);
         }
       }

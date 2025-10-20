@@ -1,6 +1,7 @@
 package http
 
 import (
+	"api/internal/entity/enum"
 	"api/internal/model"
 	"api/internal/usecase"
 	"math"
@@ -64,6 +65,8 @@ func (c *UserController) FindAll(ctx *fiber.Ctx) error {
 		PerPage:  ctx.QueryInt("perPage"),
 		Name:     ctx.Query("name"),
 		Username: ctx.Query("username"),
+		Phone:    ctx.Query("phone"),
+		Role:     enum.UserRole(ctx.Query("role")),
 	}
 
 	response, total, err := c.UserUseCase.FindAll(ctx.UserContext(), request)

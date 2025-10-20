@@ -26,7 +26,7 @@ func (c *RouteConfig) Setup() {
 }
 
 func (c *RouteConfig) SetupGuestRoute() {
-	// todo create login user
+	// login user
 	c.App.Post("/api/login", c.UserController.Login)
 }
 

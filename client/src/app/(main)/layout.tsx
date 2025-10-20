@@ -11,7 +11,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <header className="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-2">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"

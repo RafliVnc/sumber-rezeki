@@ -10,9 +10,6 @@ import (
 	"strings"
 	"testing"
 
-	// "time"
-
-	// "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -146,49 +143,3 @@ func TestDelete(t *testing.T) {
 	assert.Equal(t, http.StatusOK, response.StatusCode)
 	assert.Equal(t, responseBody.Data, true)
 }
-
-// func TestRedis(t *testing.T) {
-// 	rdb := redis.NewClient(&redis.Options{
-// 		Addr:             "localhost:6379",
-// 		Password:         "",
-// 		DB:               0,
-// 		DisableIndentity: true,
-// 	})
-// 	ctx := context.Background()
-
-// 	t.Run("conection", func(t *testing.T) {
-// 		assert.NotNil(t, rdb)
-
-// 		// err := rdb.Close()
-// 		// assert.Nil(t, err)
-// 	})
-
-// 	t.Run("Ping", func(t *testing.T) {
-// 		result, err := rdb.Ping(ctx).Result()
-
-// 		assert.Nil(t, err)
-// 		assert.Equal(t, "PONG", result)
-// 	})
-
-// 	t.Run("Set", func(t *testing.T) {
-// 		rdb.SetEx(ctx, "key", "value", time.Second)
-
-// 		result, err := rdb.Get(ctx, "key").Result()
-// 		assert.Nil(t, err)
-
-// 		assert.Equal(t, "value", result)
-// 	})
-
-// 	t.Run("List", func(t *testing.T) {
-// 		rdb.RPush(ctx, "key", "value")
-// 		rdb.LPush(ctx, "key", "value left")
-// 		rdb.RPush(ctx, "key", "value right")
-
-// 		assert.Equal(t, "value right", rdb.RPop(ctx, "key").Val())
-// 		assert.Equal(t, "value left", rdb.LPop(ctx, "key").Val())
-// 		assert.Equal(t, "value", rdb.LPop(ctx, "key").Val())
-
-// 		rdb.Del(ctx, "key")
-// 	})
-
-// }

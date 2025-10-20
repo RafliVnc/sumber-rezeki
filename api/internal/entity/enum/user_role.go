@@ -3,8 +3,8 @@ package enum
 type UserRole string
 
 const (
-	SuperAdmin    UserRole = "SUPER_ADMIN"
-	Owner         UserRole = "OWNER"
-	WarehouseHead UserRole = "WAREHOUSE_HEAD"
-	Treasurer     UserRole = "TREASURER"
+	SUPER_ADMIN    UserRole = "SUPER_ADMIN"
+	OWNER          UserRole = "OWNER"
+	WAREHOUSE_HEAD UserRole = "WAREHOUSE_HEAD"
+	TREASURER      UserRole = "TREASURER"
 )

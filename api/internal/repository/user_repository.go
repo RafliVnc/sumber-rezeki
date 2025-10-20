@@ -11,13 +11,13 @@ import (
 )
 
 type UserRepository interface {
+	FindAll(db *gorm.DB, request *model.FindAllUserRequest) ([]entity.User, int64, error)
 	Create(db *gorm.DB, entity *entity.User) error
 	Update(db *gorm.DB, entity *entity.User) error
-	CountByUsername(db *gorm.DB, username string) (int64, error)
-	FindAll(db *gorm.DB, request *model.FindAllUserRequest) ([]entity.User, int64, error)
-	CheckUsernameUniqueness(tx *gorm.DB, username string, id uuid.UUID) (int64, error)
 	Delete(db *gorm.DB, id uuid.UUID) error
 	FindById(db *gorm.DB, id uuid.UUID) (*entity.User, error)
+	CountByUsername(db *gorm.DB, username string) (int64, error)
+	CountByPhone(db *gorm.DB, phone string) (int64, error)
 	FindByUsername(db *gorm.DB, username string) (*entity.User, error)
 }
 
@@ -41,7 +41,17 @@ func (r *UserRepositoryImpl) Update(db *gorm.DB, entity *entity.User) error {
 
 func (r *UserRepositoryImpl) CountByUsername(db *gorm.DB, username string) (int64, error) {
 	var count int64
-	err := db.Model(new(entity.User)).Where("username = ?", username).Count(&count).Error
+
+	// Cek with soft delete
+	err := db.Unscoped().Model(new(entity.User)).Where("username = ?", username).Count(&count).Error
+	return count, err
+}
+
+func (r *UserRepositoryImpl) CountByPhone(db *gorm.DB, phone string) (int64, error) {
+	var count int64
+
+	// Cek with soft delete
+	err := db.Unscoped().Model(new(entity.User)).Where("phone = ?", phone).Count(&count).Error
 	return count, err
 }
 
@@ -49,12 +59,17 @@ func (r *UserRepositoryImpl) FindAll(db *gorm.DB, request *model.FindAllUserRequ
 	var users []entity.User
 	var total int64
 
-	query := db.Model(new(entity.User)).Scopes(r.FilterUser(request))
+	countQuery := db.Model(new(entity.User)).Scopes(r.FilterUser(request))
+	if err := countQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	query := countQuery
 	if request.Page > 0 && request.PerPage > 0 {
 		query = query.Offset((request.Page - 1) * request.PerPage).Limit(request.PerPage)
 	}
 
-	if err := query.Count(&total).Find(&users).Error; err != nil {
+	if err := query.Find(&users).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -73,17 +88,17 @@ func (r *UserRepositoryImpl) FilterUser(request *model.FindAllUserRequest) func(
 			tx = tx.Where("username LIKE ?", username)
 		}
 
+		if phone := request.Phone; phone != "" {
+			phone = "%" + phone + "%"
+			tx = tx.Where("phone LIKE ?", phone)
+		}
+
+		if role := request.Role; role != "" {
+			tx = tx.Where("role LIKE ?", role)
+		}
+
 		return tx
 	}
-}
-
-func (r *UserRepositoryImpl) CheckUsernameUniqueness(tx *gorm.DB, username string, id uuid.UUID) (int64, error) {
-	var count int64
-	if err := tx.Model(new(entity.User)).Where("username = ? AND id != ?", username, id).Count(&count).Error; err != nil {
-		return 0, err
-	}
-
-	return count, nil
 }
 
 func (r *UserRepositoryImpl) Delete(db *gorm.DB, id uuid.UUID) error {

@@ -15,7 +15,7 @@ func RegisterUserRoleValidation(validate *validator.Validate) {
 		}
 
 		switch role {
-		case enum.Owner, enum.SuperAdmin, enum.Treasurer, enum.WarehouseHead:
+		case enum.OWNER, enum.SUPER_ADMIN, enum.TREASURER, enum.WAREHOUSE_HEAD:
 			return true
 		default:
 			return false

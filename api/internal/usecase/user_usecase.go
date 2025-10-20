@@ -70,7 +70,18 @@ func (s *UserUseCaseImpl) Create(ctx context.Context, request *model.RegisterUse
 		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
 	}
 
-	// TODO: CHECK PHONE
+	//check phone uniqueness
+	phoneCount, err := s.UserRepository.CountByPhone(tx, request.Phone)
+	if err != nil {
+		s.Log.Warnf("Failed check phone to database : %+v", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	if phoneCount > 0 {
+		s.Log.Warnf("Phone already exists : %s", request.Phone)
+		errorMessage := fmt.Sprintf("Phone %s already exists", request.Phone)
+		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
+	}
 
 	//encript password
 	password, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
@@ -115,12 +126,14 @@ func (s *UserUseCaseImpl) FindAll(ctx context.Context, request *model.FindAllUse
 		return nil, 0, model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
 	}
 
+	//get users
 	users, total, err := s.UserRepository.FindAll(s.DB.WithContext(ctx), request)
 	if err != nil {
 		s.Log.WithError(err).Error("error getting users")
 		return nil, 0, fiber.ErrInternalServerError
 	}
 
+	// convert to arry response
 	responses := make([]model.UserResponse, len(users))
 	for i, user := range users {
 		responses[i] = *converter.ToUserResponse(&user)
@@ -140,27 +153,49 @@ func (s *UserUseCaseImpl) Update(ctx context.Context, request *model.UpdateUserR
 		return nil, model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
 	}
 
-	//check username
-	count, err := s.UserRepository.CheckUsernameUniqueness(tx, request.Username, request.ID)
+	// check user
+	user, err := s.UserRepository.FindById(tx, request.ID)
+	if err != nil {
+		s.Log.Warnf("Failed find user to database : %+v", err)
+		return nil, fiber.ErrInternalServerError
+	}
+
+	//check username uniqueness
+	count, err := s.UserRepository.CountByUsername(tx, request.Username)
 	if err != nil {
 		s.Log.Warnf("Failed check username to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
-	if count > 0 {
+	if count > 0 && user.Username != request.Username {
 		s.Log.Warnf("Username already exists : %s", request.Username)
 		errorMessage := fmt.Sprintf("Username %s already exists", request.Username)
 		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
 	}
 
-	//set user
-	user := &entity.User{
-		ID:       request.ID,
-		Username: request.Username,
-		Name:     request.Name,
+	//check phone uniqueness
+	phoneCount, err := s.UserRepository.CountByPhone(tx, request.Phone)
+	if err != nil {
+		s.Log.Warnf("Failed check phone to database : %+v", err)
+		return nil, fiber.ErrInternalServerError
 	}
 
-	if err := s.UserRepository.Update(tx, user); err != nil {
+	if phoneCount > 0 && user.Phone != request.Phone {
+		s.Log.Warnf("Phone already exists : %s", request.Phone)
+		errorMessage := fmt.Sprintf("Phone %s already exists", request.Phone)
+		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
+	}
+
+	//set user
+	updateUser := &entity.User{
+		ID:       request.ID,
+		Name:     request.Name,
+		Username: request.Username,
+		Phone:    request.Phone,
+		Role:     request.Role,
+	}
+
+	if err := s.UserRepository.Update(tx, updateUser); err != nil {
 		s.Log.Warnf("Failed update user to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
@@ -170,11 +205,13 @@ func (s *UserUseCaseImpl) Update(ctx context.Context, request *model.UpdateUserR
 		s.Log.WithFields(logrus.Fields{
 			"username": request.Username,
 			"name":     request.Name,
+			"phone":    request.Phone,
+			"role":     request.Role,
 		}).Warnf("Failed commit to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
-	return converter.ToUserResponse(user), nil
+	return converter.ToUserResponse(updateUser), nil
 }
 
 func (s *UserUseCaseImpl) Delete(ctx context.Context, request *model.DeleteUserRequest) error {

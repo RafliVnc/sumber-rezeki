@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: Go First App API
+  description: API documentation for Go First App
+  version: 1.1.0
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /api/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      description: Authenticate user with username and password to get access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Invalid username or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/current:
+    get:
+      tags: [Auth]
+      summary: Get current authenticated user
+      description: Return user information based on provided JWT token
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Unauthorized or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/users:
+    get:
+      tags: [User]
+      summary: Get all users
+      description: Get all users with pagination and filtering
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+        - name: perPage
+          in: query
+          schema:
+            type: integer
+            example: 10
+        - name: name
+          in: query
+          schema:
+            type: string
+            example: John
+        - name: username
+          in: query
+          schema:
+            type: string
+            example: johndoe
+        - name: phone
+          in: query
+          schema:
+            type: string
+            example: "08123456789"
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [SUPER_ADMIN, OWNER, WAREHOUSE_HEAD, TREASURER]
+      responses:
+        "200":
+          description: Success fetching users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserResponse"
+                  paging:
+                    $ref: "#/components/schemas/Paging"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      tags: [User]
+      summary: Create a new user
+      description: Create a new user account
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequest"
+      responses:
+        "201":
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/users/{userId}:
+    put:
+      tags: [User]
+      summary: Update existing user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequest"
+      responses:
+        "200":
+          description: User successfully updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags: [User]
+      summary: Delete user
+      description: Permanently delete user by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: User successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: superadmin
+        password:
+          type: string
+          format: password
+          example: "123456"
+
+    UserRequest:
+      type: object
+      required:
+        - name
+        - username
+        - password
+        - role
+      properties:
+        name:
+          type: string
+          example: John Doe
+        username:
+          type: string
+          example: johndoe
+        password:
+          type: string
+          format: password
+          example: "123456"
+        phone:
+          type: string
+          example: "08123456789"
+        role:
+          type: string
+          enum: [SUPER_ADMIN, OWNER, WAREHOUSE_HEAD, TREASURER]
+          example: SUPER_ADMIN
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 3fac46fc-15ae-49af-b4b4-4cad48bca1af
+        name:
+          type: string
+          example: John Doe
+        username:
+          type: string
+          example: johndoe
+        phone:
+          type: string
+          example: "08123456789"
+        role:
+          type: string
+          enum: [SUPER_ADMIN, OWNER, WAREHOUSE_HEAD, TREASURER]
+          example: SUPER_ADMIN
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Paging:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 10
+        total_item:
+          type: integer
+          example: 45
+        total_page:
+          type: integer
+          example: 5
+
+    ErrorDetails:
+      type: object
+      properties:
+        field:
+          type: string
+          example: username
+        message:
+          type: string
+          example: is required
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: validation error
+        details:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorDetails"
