@@ -12,13 +12,11 @@ import (
 
 type TokenUtil struct {
 	SecretKey string
-	// Redis     *redis.Client
 }
 
 func NewTokenUtil(secretKey string) *TokenUtil {
 	return &TokenUtil{
 		SecretKey: secretKey,
-		// Redis:     redisClient,
 	}
 }
 
@@ -32,11 +30,6 @@ func (t TokenUtil) CreateToken(ctx context.Context, auth *model.Auth) (string, e
 	if err != nil {
 		return "", err
 	}
-
-	// _, err = t.Redis.SetEx(ctx, jwtToken, auth.ID, time.Hour*25*30).Result()
-	// if err != nil {
-	// 	return "", err
-	// }
 
 	return jwtToken, nil
 }
@@ -55,15 +48,6 @@ func (t TokenUtil) ParseToken(ctx context.Context, jwtToken string) (*model.Auth
 	if int64(expire) < time.Now().UnixMilli() {
 		return nil, fiber.ErrUnauthorized
 	}
-
-	// result, err := t.Redis.Exists(ctx, jwtToken).Result()
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// if result == 0 {
-	// 	return nil, fiber.ErrUnauthorized
-	// }
 
 	id := claims["id"].(string)
 	auth := &model.Auth{

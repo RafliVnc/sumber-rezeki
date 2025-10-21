@@ -38,7 +38,7 @@ func (c *UserController) Register(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.JSON(model.WebResponse[*model.UserResponse]{Data: response})
+	return ctx.Status(fiber.StatusCreated).JSON(model.WebResponse[*model.UserResponse]{Data: response})
 }
 
 func (c *UserController) Login(ctx *fiber.Ctx) error {
@@ -50,13 +50,16 @@ func (c *UserController) Login(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
 
-	response, err := c.UserUseCase.Login(ctx.UserContext(), request)
+	response, token, err := c.UserUseCase.Login(ctx.UserContext(), request)
 	if err != nil {
 		c.Log.Warnf("Failed to login user : %+v", err)
 		return err
 	}
 
-	return ctx.JSON(model.WebResponse[*model.LoginUserResponse]{Data: response})
+	return ctx.JSON(model.WebResponse[*model.UserResponse]{
+		Data:  response,
+		Token: token,
+	})
 }
 
 func (c *UserController) FindAll(ctx *fiber.Ctx) error {

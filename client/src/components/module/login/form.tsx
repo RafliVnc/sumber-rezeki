@@ -25,7 +25,7 @@ import { useApp } from "@/context/app-context";
 import Cookies from "js-cookie";
 
 const postAuth = async (values: z.infer<typeof AuthValidation.MAIN>) => {
-  const res = await api<{ data: { User: User; token: string } }>({
+  const res = await api<{ data: User; token: string }>({
     url: "login",
     method: "POST",
     body: values,
@@ -48,12 +48,12 @@ export default function form() {
 
   const submitMutation = useMutation({
     mutationFn: postAuth,
-    onSuccess: ({ data }) => {
+    onSuccess: ({ data, token }) => {
       // set token
-      Cookies.set("token", data.token, { expires: 1 });
-      localStorage.setItem("token", data.token);
+      Cookies.set("token", token, { expires: 1 });
+      localStorage.setItem("token", token);
 
-      app.setUser(data.User);
+      app.setUser(data);
       // rederect
       router.push("/user");
       toast.success("Selamat datang kembali!");

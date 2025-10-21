@@ -27,11 +27,12 @@ paths:
               schema:
                 type: object
                 properties:
+                  data:
+                    $ref: "#/components/schemas/UserResponse"
                   token:
                     type: string
                     example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                  user:
-                    $ref: "#/components/schemas/UserResponse"
+
         "400":
           description: Invalid username or password
           content:
@@ -305,9 +306,6 @@ components:
           enum: [SUPER_ADMIN, OWNER, WAREHOUSE_HEAD, TREASURER]
           example: SUPER_ADMIN
         createdAt:
-          type: string
-          format: date-time
-        updated_at:
           type: string
           format: date-time
 

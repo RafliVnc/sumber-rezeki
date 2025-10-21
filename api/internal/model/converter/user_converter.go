@@ -15,10 +15,3 @@ func ToUserResponse(user *entity.User) *model.UserResponse {
 		CreatedAt: user.CreatedAt,
 	}
 }
-
-func UserToTokenResponse(user *entity.User, token string) *model.LoginUserResponse {
-	return &model.LoginUserResponse{
-		User:  *ToUserResponse(user),
-		Token: token,
-	}
-}

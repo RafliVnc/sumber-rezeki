@@ -20,22 +20,21 @@ func NewFiber(config *viper.Viper) *fiber.App {
 func NewErrorHandler() fiber.ErrorHandler {
 	return func(ctx *fiber.Ctx, err error) error {
 		code := fiber.StatusInternalServerError
+
+		// Check if it's a custom ErrorResponse
+		if e, ok := err.(*model.ErrorResponse); ok {
+			return ctx.Status(e.Code).JSON(e)
+		}
+
+		// Check if it's a fiber.Error
 		if e, ok := err.(*fiber.Error); ok {
 			code = e.Code
 		}
 
-		var errorMessage *model.ErrorResponse
-		errorMessage = &model.ErrorResponse{
+		// Default error response
+		errorMessage := &model.ErrorResponse{
 			Code:    code,
 			Message: err.Error(),
-		}
-
-		if e, ok := err.(*model.ErrorResponse); ok {
-			errorMessage = &model.ErrorResponse{
-				Code:    e.Code,
-				Message: e.Message,
-				Details: e.Details,
-			}
 		}
 
 		return ctx.Status(code).JSON(errorMessage)

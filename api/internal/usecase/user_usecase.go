@@ -21,7 +21,7 @@ type UserUseCase interface {
 	Create(ctx context.Context, request *model.RegisterUserRequest) (*model.UserResponse, error)
 	FindAll(ctx context.Context, request *model.FindAllUserRequest) ([]model.UserResponse, int64, error)
 	Update(ctx context.Context, request *model.UpdateUserRequest) (*model.UserResponse, error)
-	Login(ctx context.Context, request *model.LoginUserRequest) (*model.LoginUserResponse, error)
+	Login(ctx context.Context, request *model.LoginUserRequest) (*model.UserResponse, string, error)
 	Delete(ctx context.Context, request *model.DeleteUserRequest) error
 	Verify(ctx context.Context, request *model.Auth) (*model.Auth, error)
 	Current(ctx context.Context, jwtToken string) (*model.UserResponse, error)
@@ -52,7 +52,7 @@ func (s *UserUseCaseImpl) Create(ctx context.Context, request *model.RegisterUse
 
 	//check request validation
 	details, errorMessage, err := utils.ValidateStruct(request)
-	if err != nil {
+	if err != nil || details != nil {
 		s.Log.Warnf("Failed to validate request: %+v", details)
 		return nil, model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
 	}
@@ -258,7 +258,7 @@ func (s *UserUseCaseImpl) Delete(ctx context.Context, request *model.DeleteUserR
 	return nil
 }
 
-func (s *UserUseCaseImpl) Login(ctx context.Context, request *model.LoginUserRequest) (*model.LoginUserResponse, error) {
+func (s *UserUseCaseImpl) Login(ctx context.Context, request *model.LoginUserRequest) (*model.UserResponse, string, error) {
 	tx := s.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
@@ -266,27 +266,27 @@ func (s *UserUseCaseImpl) Login(ctx context.Context, request *model.LoginUserReq
 	details, errorMessage, err := utils.ValidateStruct(request)
 	if err != nil {
 		s.Log.Warnf("Failed to validate request: %+v", details)
-		return nil, model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
+		return nil, "", model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
 	}
 
 	user, err := s.UserRepository.FindByUsername(tx, request.Username)
 	if err != nil || user == nil {
 		s.Log.Warnf("Failed find user by username : %+v", err)
-		return nil, fiber.NewError(fiber.StatusUnauthorized, "Username atau kata sandi tidak valid")
+		return nil, "", fiber.NewError(fiber.StatusUnauthorized, "Username atau kata sandi tidak valid")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
 		s.Log.Warnf("Failed compare password : %+v", err)
-		return nil, fiber.NewError(fiber.StatusUnauthorized, "Username atau kata sandi tidak valid")
+		return nil, "", fiber.NewError(fiber.StatusUnauthorized, "Username atau kata sandi tidak valid")
 	}
 
 	token, err := s.TokenUtil.CreateToken(ctx, &model.Auth{ID: user.ID})
 	if err != nil {
 		s.Log.Warnf("Failed to create token : %+v", err)
-		return nil, fiber.ErrInternalServerError
+		return nil, "", fiber.ErrInternalServerError
 	}
 
-	return converter.UserToTokenResponse(user, token), nil
+	return converter.ToUserResponse(user), token, nil
 }
 
 func (s *UserUseCaseImpl) Verify(ctx context.Context, request *model.Auth) (*model.Auth, error) {

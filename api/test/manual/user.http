@@ -19,9 +19,9 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjM1Njk0MDkx
 
 {
   "name": "Test Manual",
-  "username": "manual",
-  "password": "123456",
-  "phone":"081273737777",
+  "username": "manual1",
+  "password": "1234561",
+  "phone":"0812737377717",
   "role":"SUPER_ADMIN"
 }
 

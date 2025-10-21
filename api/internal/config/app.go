@@ -32,11 +32,6 @@ func Bootstrap(config *BootstrapConfig) {
 	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validate, userRepository, tokenUtil)
 	userController := http.NewUserController(userUseCase, config.Log)
 
-	// redisClient := redis.NewClient(&redis.Options{
-	// 	Addr: "localhost:6379",
-	// 	DB:   0,
-	// })
-
 	authMiddleware := middleware.NewAuth(userUseCase, tokenUtil)
 
 	routeConfig := route.RouteConfig{
