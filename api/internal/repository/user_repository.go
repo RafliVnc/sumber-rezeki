@@ -2,6 +2,7 @@ package repository
 
 import (
 	"api/internal/entity"
+	"api/internal/entity/enum"
 	"api/internal/model"
 	"errors"
 
@@ -13,7 +14,7 @@ import (
 type UserRepository interface {
 	FindAll(db *gorm.DB, request *model.FindAllUserRequest) ([]entity.User, int64, error)
 	Create(db *gorm.DB, entity *entity.User) error
-	Update(db *gorm.DB, entity *entity.User) error
+	Update(db *gorm.DB, id uuid.UUID, updates any) error
 	Delete(db *gorm.DB, id uuid.UUID) error
 	FindById(db *gorm.DB, id uuid.UUID) (*entity.User, error)
 	CountByUsername(db *gorm.DB, username string) (int64, error)
@@ -35,8 +36,8 @@ func (r *UserRepositoryImpl) Create(db *gorm.DB, entity *entity.User) error {
 	return db.Create(entity).Error
 }
 
-func (r *UserRepositoryImpl) Update(db *gorm.DB, entity *entity.User) error {
-	return db.Save(entity).Error
+func (r *UserRepositoryImpl) Update(db *gorm.DB, id uuid.UUID, updates any) error {
+	return db.Model(&entity.User{}).Where("id = ?", id).Updates(updates).Error
 }
 
 func (r *UserRepositoryImpl) CountByUsername(db *gorm.DB, username string) (int64, error) {
@@ -78,24 +79,17 @@ func (r *UserRepositoryImpl) FindAll(db *gorm.DB, request *model.FindAllUserRequ
 
 func (r *UserRepositoryImpl) FilterUser(request *model.FindAllUserRequest) func(tx *gorm.DB) *gorm.DB {
 	return func(tx *gorm.DB) *gorm.DB {
-		if name := request.Name; name != "" {
-			name = "%" + name + "%"
-			tx = tx.Where("name LIKE ?", name)
+		if search := request.Name; search != "" && request.Name == request.Username && request.Username == request.Phone {
+			search = "%" + search + "%"
+			tx = tx.Where("name LIKE ? OR username LIKE ? OR phone LIKE ?", search, search, search)
 		}
 
-		if username := request.Username; username != "" {
-			username = "%" + username + "%"
-			tx = tx.Where("username LIKE ?", username)
+		if len(request.Roles) > 0 {
+			tx = tx.Where("role IN ?", request.Roles)
 		}
 
-		if phone := request.Phone; phone != "" {
-			phone = "%" + phone + "%"
-			tx = tx.Where("phone LIKE ?", phone)
-		}
-
-		if role := request.Role; role != "" {
-			tx = tx.Where("role LIKE ?", role)
-		}
+		// exclude SUPER_ADMIN
+		tx = tx.Where("role != ?", enum.SUPER_ADMIN)
 
 		return tx
 	}

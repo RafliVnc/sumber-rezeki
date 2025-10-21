@@ -5,6 +5,7 @@ import (
 	"api/internal/model"
 	"api/internal/usecase"
 	"math"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -63,10 +64,17 @@ func (c *UserController) FindAll(ctx *fiber.Ctx) error {
 	request := &model.FindAllUserRequest{
 		Page:     ctx.QueryInt("page"),
 		PerPage:  ctx.QueryInt("perPage"),
-		Name:     ctx.Query("name"),
-		Username: ctx.Query("username"),
-		Phone:    ctx.Query("phone"),
-		Role:     enum.UserRole(ctx.Query("role")),
+		Name:     ctx.Query("search"),
+		Username: ctx.Query("search"),
+		Phone:    ctx.Query("search"),
+	}
+
+	rolesRaw := ctx.Context().QueryArgs().PeekMulti("roles[]")
+	for _, r := range rolesRaw {
+		role := strings.TrimSpace(string(r))
+		if role != "" {
+			request.Roles = append(request.Roles, enum.UserRole(role))
+		}
 	}
 
 	response, total, err := c.UserUseCase.FindAll(ctx.UserContext(), request)

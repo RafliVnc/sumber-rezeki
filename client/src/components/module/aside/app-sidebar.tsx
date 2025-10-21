@@ -22,17 +22,17 @@ const data = {
     avatar: "logo.svg",
   },
   navMain: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: SquareTerminal,
-      items: [
-        {
-          title: "salses",
-          url: "/sales",
-        },
-      ],
-    },
+    // {
+    //   title: "Settings",
+    //   url: "#",
+    //   icon: SquareTerminal,
+    //   items: [
+    //     {
+    //       title: "salses",
+    //       url: "/sales",
+    //     },
+    //   ],
+    // },
     {
       title: "Pengguna",
       url: "/user",

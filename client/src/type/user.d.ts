@@ -9,6 +9,8 @@ type User = {
   id: string;
   name: string;
   username: string;
+  phone: string;
   password?: string;
   role: UserRole;
+  createdAt: Date;
 };

@@ -82,7 +82,7 @@ export default function form() {
               <FormLabel>Username/ No Handphone</FormLabel>
               <FormControl>
                 <Input
-                  type="email"
+                  type="text"
                   autoComplete="username"
                   placeholder="Username/ No Handphone"
                   {...field}
@@ -100,7 +100,6 @@ export default function form() {
               <FormLabel>Kata Sandi</FormLabel>
               <FormControl>
                 <InputPassword
-                  type="password"
                   placeholder="Kata Sandi"
                   autoComplete="current-password"
                   {...field}

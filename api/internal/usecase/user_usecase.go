@@ -160,6 +160,11 @@ func (s *UserUseCaseImpl) Update(ctx context.Context, request *model.UpdateUserR
 		return nil, fiber.ErrInternalServerError
 	}
 
+	if user == nil {
+		s.Log.Warnf("User not found : %d", request.ID)
+		return nil, fiber.NewError(fiber.StatusNotFound, "user  not found")
+	}
+
 	//check username uniqueness
 	count, err := s.UserRepository.CountByUsername(tx, request.Username)
 	if err != nil {
@@ -195,7 +200,7 @@ func (s *UserUseCaseImpl) Update(ctx context.Context, request *model.UpdateUserR
 		Role:     request.Role,
 	}
 
-	if err := s.UserRepository.Update(tx, updateUser); err != nil {
+	if err := s.UserRepository.Update(tx, user.ID, updateUser); err != nil {
 		s.Log.Warnf("Failed update user to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
@@ -234,7 +239,7 @@ func (s *UserUseCaseImpl) Delete(ctx context.Context, request *model.DeleteUserR
 
 	if user == nil {
 		s.Log.Warnf("User not found : %d", request.ID)
-		return fiber.NewError(fiber.StatusNotFound, fmt.Sprintf("user with id %d not found", request.ID))
+		return fiber.NewError(fiber.StatusNotFound, "user  not found")
 	}
 
 	if err := s.UserRepository.Delete(tx, request.ID); err != nil {
@@ -265,14 +270,14 @@ func (s *UserUseCaseImpl) Login(ctx context.Context, request *model.LoginUserReq
 	}
 
 	user, err := s.UserRepository.FindByUsername(tx, request.Username)
-	if err != nil {
+	if err != nil || user == nil {
 		s.Log.Warnf("Failed find user by username : %+v", err)
-		return nil, fiber.ErrUnauthorized
+		return nil, fiber.NewError(fiber.StatusUnauthorized, "Username atau kata sandi tidak valid")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(request.Password)); err != nil {
 		s.Log.Warnf("Failed compare password : %+v", err)
-		return nil, fiber.ErrUnauthorized
+		return nil, fiber.NewError(fiber.StatusUnauthorized, "Username atau kata sandi tidak valid")
 	}
 
 	token, err := s.TokenUtil.CreateToken(ctx, &model.Auth{ID: user.ID})
@@ -294,10 +299,16 @@ func (s *UserUseCaseImpl) Verify(ctx context.Context, request *model.Auth) (*mod
 		return nil, fiber.ErrBadRequest
 	}
 
+	// Chek user
 	user, err := s.UserRepository.FindById(tx, request.ID)
 	if err != nil {
 		s.Log.Warnf("Failed find user by username : %+v", err)
 		return nil, fiber.ErrUnauthorized
+	}
+
+	if user == nil {
+		s.Log.Warnf("User not found : %d", request.ID)
+		return nil, fiber.NewError(fiber.StatusNotFound, "user  not found")
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -322,6 +333,11 @@ func (s *UserUseCaseImpl) Current(ctx context.Context, jwtToken string) (*model.
 	if err != nil {
 		s.Log.Warnf("Failed find user by username : %+v", err)
 		return nil, fiber.ErrUnauthorized
+	}
+
+	if user == nil {
+		s.Log.Warnf("User not found : %d", token.ID)
+		return nil, fiber.NewError(fiber.StatusNotFound, "user  not found")
 	}
 
 	return converter.ToUserResponse(user), nil

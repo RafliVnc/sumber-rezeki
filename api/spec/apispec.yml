@@ -304,7 +304,7 @@ components:
           type: string
           enum: [SUPER_ADMIN, OWNER, WAREHOUSE_HEAD, TREASURER]
           example: SUPER_ADMIN
-        created_at:
+        createdAt:
           type: string
           format: date-time
         updated_at:
@@ -317,13 +317,13 @@ components:
         page:
           type: integer
           example: 1
-        per_page:
+        perPage:
           type: integer
           example: 10
-        total_item:
+        totalItems:
           type: integer
           example: 45
-        total_page:
+        totalPages:
           type: integer
           example: 5
 

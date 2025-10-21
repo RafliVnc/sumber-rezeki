@@ -8,7 +8,7 @@ type WebResponse[T any] struct {
 
 type PageMetadata struct {
 	Page      int   `json:"page"`
-	PerPage   int   `json:"per_page"`
-	TotalItem int64 `json:"total_item"`
-	TotalPage int64 `json:"total_page"`
+	PerPage   int   `json:"perPage"`
+	TotalItem int64 `json:"totalItems"`
+	TotalPage int64 `json:"totalPages"`
 }

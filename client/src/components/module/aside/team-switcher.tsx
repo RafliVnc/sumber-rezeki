@@ -33,7 +33,7 @@ export function TeamSwitcher() {
           {state !== "collapsed" && (
             <>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <h5 className="font-medium text-md">SUMBER REZEKI</h5>
+                <h5 className="font-bold text-md">SUMBER REZEKI</h5>
               </div>
             </>
           )}

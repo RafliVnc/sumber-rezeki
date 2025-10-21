@@ -17,16 +17,27 @@ export const api = async <T>({
 }: ApiOptions): Promise<T> => {
   const token = localStorage.getItem("token");
 
-  // Convert params ke query string
-  const queryString = params
-    ? "?" +
-      new URLSearchParams(
-        Object.entries(params).reduce((acc, [key, value]) => {
-          acc[key] = String(value);
-          return acc;
-        }, {} as Record<string, string>)
-      ).toString()
-    : "";
+  // Convert params ke query string dengan support array
+  let queryString = "";
+  if (params) {
+    const searchParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+
+      // Handle array params
+      if (Array.isArray(value)) {
+        value.forEach((v) => searchParams.append(`${key}[]`, String(v)));
+      } else {
+        searchParams.append(key, String(value));
+      }
+    });
+
+    const queryStr = searchParams.toString();
+    if (queryStr) {
+      queryString = "?" + queryStr;
+    }
+  }
 
   const res = await fetch(`${ApiUrl}/${url}${queryString}`, {
     method,

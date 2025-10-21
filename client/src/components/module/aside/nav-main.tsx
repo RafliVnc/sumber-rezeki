@@ -54,7 +54,7 @@ export function NavMain({
                 defaultOpen={hasActiveChild || item.isActive}
                 className="group/collapsible"
               >
-                <SidebarMenuItem className="rounded-2xl">
+                <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       tooltip={item.title}
