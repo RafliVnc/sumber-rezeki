@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
@@ -21,24 +22,41 @@ type BootstrapConfig struct {
 	DB       *gorm.DB
 	Config   *viper.Viper
 	Validate *validator.Validate
+	Redis    *redis.Client
 }
 
 func Bootstrap(config *BootstrapConfig) {
 	utils.InitValidator()
-	tokenUtil := utils.NewTokenUtil("testSecret")
+	tokenUtil := utils.NewTokenUtil(config.Config.GetString("secret_key"), config.Redis)
 
 	//user
 	userRepository := repository.NewUserRepository(config.Log)
 	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validate, userRepository, tokenUtil)
 	userController := http.NewUserController(userUseCase, config.Log)
 
-	authMiddleware := middleware.NewAuth(userUseCase, tokenUtil)
+	// route
+	routeRepository := repository.NewRouteRepository(config.Log)
+	routeUseCase := usecase.NewRouteUseCase(config.DB, config.Log, config.Validate, routeRepository, routeRepository)
+	routeController := http.NewRouteController(routeUseCase, config.Log)
+
+	// sales
+	salesRepository := repository.NewSalesRepository(config.Log)
+	salesUseCase := usecase.NewSalesUseCase(config.DB, config.Log, config.Validate, salesRepository, routeRepository)
+	salesController := http.NewSalesController(salesUseCase, config.Log)
+
+	// hello
+	helloController := http.NewHelloController()
+
+	authMiddleware := middleware.NewAuth(tokenUtil, config.Log, config.Redis)
 
 	routeConfig := route.RouteConfig{
-		App:            config.App,
-		Config:         config.Config,
-		UserController: userController,
-		AuthMiddleware: authMiddleware,
+		App:             config.App,
+		Config:          config.Config,
+		UserController:  userController,
+		SalesController: salesController,
+		RouteController: routeController,
+		HelloController: helloController,
+		AuthMiddleware:  authMiddleware,
 	}
 
 	routeConfig.Setup()

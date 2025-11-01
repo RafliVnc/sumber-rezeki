@@ -23,7 +23,7 @@ func TestLogin(t *testing.T) {
 
 	requestBody := model.LoginUserRequest{
 		Username: user.Username,
-		Password: "rahasia",
+		Password: "password",
 	}
 
 	bodyJson, err := json.Marshal(requestBody)

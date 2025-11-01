@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,41 +9,20 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "../../../ui/table/data-table-column-header";
 import { ConvertUserRole } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { UserRole } from "@/type/enum/user-role";
 
-// This type is used to define the shape of our data.
-// You can use a Zod schema here if you want.
-
-export const columns: ColumnDef<User>[] = [
-  // {
-  //   id: "select",
-  //   header: ({ table }) => (
-  //     <Checkbox
-  //       checked={
-  //         table.getIsAllPageRowsSelected() ||
-  //         (table.getIsSomePageRowsSelected() && "indeterminate")
-  //       }
-  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-  //       aria-label="Select all"
-  //     />
-  //   ),
-  //   cell: ({ row }) => (
-  //     <Checkbox
-  //       checked={row.getIsSelected()}
-  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
-  //       aria-label="Select row"
-  //     />
-  //   ),
-  //   enableSorting: false,
-  //   enableHiding: false,
-  // },
+export const columns = ({
+  handleEdit,
+  handleDelete,
+}: {
+  handleEdit: (value: User) => void;
+  handleDelete: (id: string) => void;
+}): ColumnDef<User>[] => [
   {
     accessorKey: "name",
     header: "Name",
@@ -81,7 +60,7 @@ export const columns: ColumnDef<User>[] = [
     id: "actions",
     header: "Aksi",
     cell: ({ row }) => {
-      const payment = row.original;
+      const user = row.original;
 
       return (
         <DropdownMenu>
@@ -92,15 +71,23 @@ export const columns: ColumnDef<User>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => {
+                handleEdit(user);
+              }}
             >
-              Copy payment ID
+              <Pencil className="size-4" />
+              Ubah Pengguna
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => {
+                handleDelete(user.id);
+              }}
+            >
+              <Trash2 className="size-4" /> Hapus Pengguna
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

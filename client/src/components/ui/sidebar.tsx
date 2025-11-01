@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react";
+import { ChevronsLeft, PanelLeftIcon } from "lucide-react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -69,9 +69,49 @@ function SidebarProvider({
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
 
-  // This is the internal state of the sidebar.
-  // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(defaultOpen);
+  // Deteksi ukuran layar: mobile (sm), tablet (md), desktop (lg+)
+  const [screenSize, setScreenSize] = React.useState<
+    "mobile" | "tablet" | "desktop"
+  >(() => {
+    if (typeof window === "undefined") return "desktop";
+    const width = window.innerWidth;
+    if (width < 768) return "mobile"; // sm
+    if (width < 1024) return "tablet"; // md
+    return "desktop"; // lg+
+  });
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        setScreenSize("mobile");
+      } else if (width < 1024) {
+        setScreenSize("tablet");
+      } else {
+        setScreenSize("desktop");
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Set default berdasarkan ukuran layar
+  // Mobile (sm): true, Tablet (md): false, Desktop (lg+): true
+  const getDefaultOpen = React.useCallback(() => {
+    if (screenSize === "tablet") return false; // collapsed untuk md
+    return defaultOpen; // expanded untuk sm dan lg+
+  }, [screenSize, defaultOpen]);
+
+  const [_open, _setOpen] = React.useState(getDefaultOpen);
+
+  // Update state ketika ukuran layar berubah
+  React.useEffect(() => {
+    if (openProp === undefined) {
+      _setOpen(getDefaultOpen());
+    }
+  }, [screenSize, openProp, getDefaultOpen]);
+
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
@@ -264,7 +304,7 @@ function SidebarTrigger({
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
-      variant="ghost"
+      variant="default"
       size="icon"
       className={cn("size-7", className)}
       onClick={(event) => {
@@ -273,7 +313,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <ChevronsLeft />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );

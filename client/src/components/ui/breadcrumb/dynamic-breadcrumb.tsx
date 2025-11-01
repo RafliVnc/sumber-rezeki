@@ -20,6 +20,7 @@ import {
 
 const breadcrumbTranslations: Record<string, string> = {
   user: "Pengguna",
+  route: "Rute",
 };
 
 export const translateBreadcrumb = (segment: string): string => {

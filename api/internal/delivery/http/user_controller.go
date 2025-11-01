@@ -1,6 +1,7 @@
 package http
 
 import (
+	"api/internal/delivery/http/middleware"
 	"api/internal/entity/enum"
 	"api/internal/model"
 	"api/internal/usecase"
@@ -65,11 +66,9 @@ func (c *UserController) Login(ctx *fiber.Ctx) error {
 func (c *UserController) FindAll(ctx *fiber.Ctx) error {
 
 	request := &model.FindAllUserRequest{
-		Page:     ctx.QueryInt("page"),
-		PerPage:  ctx.QueryInt("perPage"),
-		Name:     ctx.Query("search"),
-		Username: ctx.Query("search"),
-		Phone:    ctx.Query("search"),
+		Page:    ctx.QueryInt("page"),
+		PerPage: ctx.QueryInt("perPage"),
+		Search:  ctx.Query("search"),
 	}
 
 	rolesRaw := ctx.Context().QueryArgs().PeekMulti("roles[]")
@@ -151,9 +150,9 @@ func (c *UserController) Delete(ctx *fiber.Ctx) error {
 }
 
 func (c *UserController) Current(ctx *fiber.Ctx) error {
-	request := &model.VerifyUserRequest{Token: ctx.Get("Authorization", "NOT_FOUND")}
+	auth := middleware.GetUser(ctx)
 
-	response, err := c.UserUseCase.Current(ctx.UserContext(), request.Token)
+	response, err := c.UserUseCase.Current(ctx.UserContext(), auth.ID)
 	if err != nil {
 		c.Log.WithError(err).Error("error getting user")
 		return fiber.ErrUnauthorized

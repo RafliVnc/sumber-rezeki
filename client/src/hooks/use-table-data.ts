@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 
 interface UseTableDataOptions<TData, TFilters extends Record<string, any>> {
-  queryKey: string; // e.g., "users", "products"
+  queryKey: string;
   queryFn: (params: {
     perPage: number;
     page: number;
@@ -38,7 +38,7 @@ export function useTableData<TData, TFilters extends Record<string, any> = {}>({
     ...(Object.keys(filters).length > 0 && { filters }),
   };
 
-  const { data, isFetching, isError, error } = useQuery({
+  const { data, isFetching, isError, error, refetch } = useQuery({
     queryKey: [
       queryKey,
       pagination.pageIndex,
@@ -86,6 +86,7 @@ export function useTableData<TData, TFilters extends Record<string, any> = {}>({
     filters,
 
     // Actions
+    refetch,
     setPagination,
     handleSearchChange,
     handleFilterChange,

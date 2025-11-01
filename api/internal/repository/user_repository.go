@@ -22,25 +22,24 @@ type UserRepository interface {
 	FindByUsername(db *gorm.DB, username string) (*entity.User, error)
 }
 
-type UserRepositoryImpl struct {
+type userRepositoryImpl struct {
 	Log *logrus.Logger
 }
 
-func NewUserRepository(log *logrus.Logger) *UserRepositoryImpl {
-	return &UserRepositoryImpl{
-		Log: log,
-	}
+func NewUserRepository(log *logrus.Logger) UserRepository {
+	return &userRepositoryImpl{
+		Log: log}
 }
 
-func (r *UserRepositoryImpl) Create(db *gorm.DB, entity *entity.User) error {
+func (r *userRepositoryImpl) Create(db *gorm.DB, entity *entity.User) error {
 	return db.Create(entity).Error
 }
 
-func (r *UserRepositoryImpl) Update(db *gorm.DB, id uuid.UUID, updates any) error {
+func (r *userRepositoryImpl) Update(db *gorm.DB, id uuid.UUID, updates any) error {
 	return db.Model(&entity.User{}).Where("id = ?", id).Updates(updates).Error
 }
 
-func (r *UserRepositoryImpl) CountByUsername(db *gorm.DB, username string) (int64, error) {
+func (r *userRepositoryImpl) CountByUsername(db *gorm.DB, username string) (int64, error) {
 	var count int64
 
 	// Cek with soft delete
@@ -48,7 +47,7 @@ func (r *UserRepositoryImpl) CountByUsername(db *gorm.DB, username string) (int6
 	return count, err
 }
 
-func (r *UserRepositoryImpl) CountByPhone(db *gorm.DB, phone string) (int64, error) {
+func (r *userRepositoryImpl) CountByPhone(db *gorm.DB, phone string) (int64, error) {
 	var count int64
 
 	// Cek with soft delete
@@ -56,30 +55,34 @@ func (r *UserRepositoryImpl) CountByPhone(db *gorm.DB, phone string) (int64, err
 	return count, err
 }
 
-func (r *UserRepositoryImpl) FindAll(db *gorm.DB, request *model.FindAllUserRequest) ([]entity.User, int64, error) {
+func (r *userRepositoryImpl) FindAll(db *gorm.DB, request *model.FindAllUserRequest) ([]entity.User, int64, error) {
 	var users []entity.User
 	var total int64
 
 	countQuery := db.Model(new(entity.User)).Scopes(r.FilterUser(request))
 	if err := countQuery.Count(&total).Error; err != nil {
+		r.Log.WithError(err).Error("failed to count users")
 		return nil, 0, err
 	}
 
-	query := countQuery
+	query := db.Model(new(entity.User)).Scopes(r.FilterUser(request)).Order("role DESC")
+
 	if request.Page > 0 && request.PerPage > 0 {
-		query = query.Offset((request.Page - 1) * request.PerPage).Limit(request.PerPage)
+		offset := (request.Page - 1) * request.PerPage
+		query = query.Offset(offset).Limit(request.PerPage)
 	}
 
 	if err := query.Find(&users).Error; err != nil {
+		r.Log.WithError(err).Error("failed to find users")
 		return nil, 0, err
 	}
 
 	return users, total, nil
 }
 
-func (r *UserRepositoryImpl) FilterUser(request *model.FindAllUserRequest) func(tx *gorm.DB) *gorm.DB {
+func (r *userRepositoryImpl) FilterUser(request *model.FindAllUserRequest) func(tx *gorm.DB) *gorm.DB {
 	return func(tx *gorm.DB) *gorm.DB {
-		if search := request.Name; search != "" && request.Name == request.Username && request.Username == request.Phone {
+		if search := request.Search; search != "" {
 			search = "%" + search + "%"
 			tx = tx.Where("name LIKE ? OR username LIKE ? OR phone LIKE ?", search, search, search)
 		}
@@ -95,11 +98,11 @@ func (r *UserRepositoryImpl) FilterUser(request *model.FindAllUserRequest) func(
 	}
 }
 
-func (r *UserRepositoryImpl) Delete(db *gorm.DB, id uuid.UUID) error {
+func (r *userRepositoryImpl) Delete(db *gorm.DB, id uuid.UUID) error {
 	return db.Delete(new(entity.User), id).Error
 }
 
-func (r *UserRepositoryImpl) FindById(db *gorm.DB, id uuid.UUID) (*entity.User, error) {
+func (r *userRepositoryImpl) FindById(db *gorm.DB, id uuid.UUID) (*entity.User, error) {
 	user := &entity.User{}
 	if err := db.First(&user, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -111,7 +114,7 @@ func (r *UserRepositoryImpl) FindById(db *gorm.DB, id uuid.UUID) (*entity.User, 
 	return user, nil
 }
 
-func (r *UserRepositoryImpl) FindByUsername(db *gorm.DB, username string) (*entity.User, error) {
+func (r *userRepositoryImpl) FindByUsername(db *gorm.DB, username string) (*entity.User, error) {
 	user := &entity.User{}
 	if err := db.First(&user, "username = ?", username).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

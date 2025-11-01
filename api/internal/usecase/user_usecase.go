@@ -24,7 +24,7 @@ type UserUseCase interface {
 	Login(ctx context.Context, request *model.LoginUserRequest) (*model.UserResponse, string, error)
 	Delete(ctx context.Context, request *model.DeleteUserRequest) error
 	Verify(ctx context.Context, request *model.Auth) (*model.Auth, error)
-	Current(ctx context.Context, jwtToken string) (*model.UserResponse, error)
+	Current(ctx context.Context, id uuid.UUID) (*model.UserResponse, error)
 }
 
 type UserUseCaseImpl struct {
@@ -36,7 +36,7 @@ type UserUseCaseImpl struct {
 }
 
 func NewUserUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate,
-	userRepository repository.UserRepository, tokenUtil *utils.TokenUtil) *UserUseCaseImpl {
+	userRepository repository.UserRepository, tokenUtil *utils.TokenUtil) UserUseCase {
 	return &UserUseCaseImpl{
 		DB:             db,
 		Log:            logger,
@@ -66,7 +66,7 @@ func (s *UserUseCaseImpl) Create(ctx context.Context, request *model.RegisterUse
 
 	if count > 0 {
 		s.Log.Warnf("Username already exists : %s", request.Username)
-		errorMessage := fmt.Sprintf("Username %s already exists", request.Username)
+		errorMessage := fmt.Sprintf("Username %s sudah pernah digunakan", request.Username)
 		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
 	}
 
@@ -79,7 +79,7 @@ func (s *UserUseCaseImpl) Create(ctx context.Context, request *model.RegisterUse
 
 	if phoneCount > 0 {
 		s.Log.Warnf("Phone already exists : %s", request.Phone)
-		errorMessage := fmt.Sprintf("Phone %s already exists", request.Phone)
+		errorMessage := fmt.Sprintf("Nomor HP %s sudah digunakan", request.Phone)
 		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
 	}
 
@@ -162,7 +162,7 @@ func (s *UserUseCaseImpl) Update(ctx context.Context, request *model.UpdateUserR
 
 	if user == nil {
 		s.Log.Warnf("User not found : %d", request.ID)
-		return nil, fiber.NewError(fiber.StatusNotFound, "user  not found")
+		return nil, fiber.NewError(fiber.StatusNotFound, "Pengguna tidak ditemukan")
 	}
 
 	//check username uniqueness
@@ -174,7 +174,7 @@ func (s *UserUseCaseImpl) Update(ctx context.Context, request *model.UpdateUserR
 
 	if count > 0 && user.Username != request.Username {
 		s.Log.Warnf("Username already exists : %s", request.Username)
-		errorMessage := fmt.Sprintf("Username %s already exists", request.Username)
+		errorMessage := fmt.Sprintf("Username %s sudah pernah digunakan", request.Username)
 		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
 	}
 
@@ -187,7 +187,7 @@ func (s *UserUseCaseImpl) Update(ctx context.Context, request *model.UpdateUserR
 
 	if phoneCount > 0 && user.Phone != request.Phone {
 		s.Log.Warnf("Phone already exists : %s", request.Phone)
-		errorMessage := fmt.Sprintf("Phone %s already exists", request.Phone)
+		errorMessage := fmt.Sprintf("Nomor HP %s sudah digunakan", request.Phone)
 		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
 	}
 
@@ -239,7 +239,7 @@ func (s *UserUseCaseImpl) Delete(ctx context.Context, request *model.DeleteUserR
 
 	if user == nil {
 		s.Log.Warnf("User not found : %d", request.ID)
-		return fiber.NewError(fiber.StatusNotFound, "user  not found")
+		return fiber.NewError(fiber.StatusNotFound, "Pengguna tidak ditemukan")
 	}
 
 	if err := s.UserRepository.Delete(tx, request.ID); err != nil {
@@ -290,8 +290,6 @@ func (s *UserUseCaseImpl) Login(ctx context.Context, request *model.LoginUserReq
 }
 
 func (s *UserUseCaseImpl) Verify(ctx context.Context, request *model.Auth) (*model.Auth, error) {
-	tx := s.DB.WithContext(ctx).Begin()
-	defer tx.Rollback()
 
 	err := s.Validate.Struct(request)
 	if err != nil {
@@ -300,7 +298,7 @@ func (s *UserUseCaseImpl) Verify(ctx context.Context, request *model.Auth) (*mod
 	}
 
 	// Chek user
-	user, err := s.UserRepository.FindById(tx, request.ID)
+	user, err := s.UserRepository.FindById(s.DB.WithContext(ctx), request.ID)
 	if err != nil {
 		s.Log.Warnf("Failed find user by username : %+v", err)
 		return nil, fiber.ErrUnauthorized
@@ -308,36 +306,23 @@ func (s *UserUseCaseImpl) Verify(ctx context.Context, request *model.Auth) (*mod
 
 	if user == nil {
 		s.Log.Warnf("User not found : %d", request.ID)
-		return nil, fiber.NewError(fiber.StatusNotFound, "user  not found")
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		s.Log.Warnf("Failed commit transaction : %+v", err)
-		return nil, fiber.ErrInternalServerError
+		return nil, fiber.NewError(fiber.StatusNotFound, "pengguna tidak ditemukan")
 	}
 
 	return &model.Auth{ID: user.ID}, nil
 }
 
-func (s *UserUseCaseImpl) Current(ctx context.Context, jwtToken string) (*model.UserResponse, error) {
-	tx := s.DB.WithContext(ctx).Begin()
-	defer tx.Rollback()
+func (s *UserUseCaseImpl) Current(ctx context.Context, id uuid.UUID) (*model.UserResponse, error) {
 
-	token, err := s.TokenUtil.ParseToken(ctx, jwtToken)
-	if err != nil {
-		s.Log.Warnf("Failed to parse token : %+v", err)
-		return nil, fiber.ErrInternalServerError
-	}
-
-	user, err := s.UserRepository.FindById(tx, token.ID)
+	user, err := s.UserRepository.FindById(s.DB.WithContext(ctx), id)
 	if err != nil {
 		s.Log.Warnf("Failed find user by username : %+v", err)
 		return nil, fiber.ErrUnauthorized
 	}
 
 	if user == nil {
-		s.Log.Warnf("User not found : %d", token.ID)
-		return nil, fiber.NewError(fiber.StatusNotFound, "user  not found")
+		s.Log.Warnf("User not found : %d", id)
+		return nil, fiber.NewError(fiber.StatusNotFound, "pengguna tidak ditemukan")
 	}
 
 	return converter.ToUserResponse(user), nil

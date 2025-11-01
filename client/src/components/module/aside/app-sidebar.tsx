@@ -38,6 +38,16 @@ const data = {
       url: "/user",
       icon: User,
     },
+    {
+      title: "Sales",
+      url: "/sales",
+      icon: User,
+    },
+    {
+      title: "Rute",
+      url: "/route",
+      icon: User,
+    },
   ],
 };
 

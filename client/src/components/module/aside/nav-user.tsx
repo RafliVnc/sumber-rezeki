@@ -42,6 +42,12 @@ export function NavUser({
   return (
     <SidebarMenu>
       <SidebarMenuItem>
+        <SidebarMenuButton onClick={app.logout}>
+          <LogOut />
+          <span>Log out</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      {/* <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
@@ -106,7 +112,7 @@ export function NavUser({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </SidebarMenuItem>
+      </SidebarMenuItem> */}
     </SidebarMenu>
   );
 }

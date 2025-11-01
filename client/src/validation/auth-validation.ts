@@ -1,4 +1,4 @@
-import { z } from "zod";
+import z from "zod";
 
 export class AuthValidation {
   static MAIN = z.object({

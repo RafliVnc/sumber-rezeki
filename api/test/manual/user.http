@@ -10,7 +10,7 @@ Content-Type: application/json
 ### Find users with pagination
 GET http://localhost:8080/api/users?page=1&perPage=10
 Accept: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjM1Njk0MDkxOTksImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.O-9e1AhhgJ_zgZv7jep2rJ7RAedjw5P0XAmiuAPb3vU
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjQ1MTgwODUxOTgsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.-Kb8MhiC81AdF9BIqj4D8x-NN9JM57d9SVFr9fK0sKQ
 
 ### Create new user
 POST http://localhost:8080/api/users
@@ -41,4 +41,11 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjM1Njk0MDkx
 ### Current User
 GET http://localhost:8080/api/current
 Accept: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjM1Njk0MDkxOTksImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.O-9e1AhhgJ_zgZv7jep2rJ7RAedjw5P0XAmiuAPb3vU
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjQzNTM4NjQ5MTQsImlkIjoiMzg2NzAzM2ItZDdkZS00YzgxLWJiM2MtNzk0NjgwZmRlOGVlIn0.Y7xvdwPgHx-ATVRufzVkhtRKEb3i6MpOCjiO1Omv87M
+
+
+### Current hello
+GET http://localhost:8080/api/hello
+Accept: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NjQyNjAzMzk1NjcsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.aQd7yWZxg6CrHjSHdKYCzJdLNAyJnF9VPVH2peQExRs
+
