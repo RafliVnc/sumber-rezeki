@@ -12,7 +12,7 @@ import (
 )
 
 func NewDatabase(v *viper.Viper, log *logrus.Logger, isTest bool) *gorm.DB {
-	// Pilih sub-konfigurasi berdasarkan mode
+	// select database
 	var dbConfig *viper.Viper
 	if isTest {
 		dbConfig = v.Sub("testing.database")

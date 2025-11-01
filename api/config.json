@@ -21,6 +21,11 @@
       "lifetime": 300
     }
   },
+  "redis": {
+    "secret_key": "sumber_rezeki",
+    "host": "localhost:6379",
+    "database": 0
+  },
   "testing": {
     "database": {
       "username": "rafli",

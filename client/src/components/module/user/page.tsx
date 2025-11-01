@@ -11,6 +11,18 @@ import { columns } from "./table/columns";
 import { api } from "@/lib/api";
 import { UserRole } from "@/type/enum/user-role";
 import { useTableData } from "@/hooks/use-table-data";
+import { useState } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import FormUser from "./form";
+import { useConfirmationDialog } from "@/context/dialog-context";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const roleOptions = [
   { label: "Owner", value: UserRole.OWNER },
@@ -37,7 +49,15 @@ const fetchUsers = async ({ perPage, page, search, filters }: any) => {
   });
 };
 
+const fetchDeleteMutation = async (id: string): Promise<boolean> => {
+  return await api({ url: `users/${id}`, method: "DELETE" });
+};
+
 export default function UserPage() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<User | undefined>(undefined);
+  const { showConfirmation } = useConfirmationDialog();
+
   const {
     data,
     pageCount,
@@ -48,6 +68,7 @@ export default function UserPage() {
     setPagination,
     handleSearchChange,
     handleFilterChange,
+    refetch,
   } = useTableData<User, UserFilters>({
     queryKey: "users",
     queryFn: fetchUsers,
@@ -61,6 +82,41 @@ export default function UserPage() {
       "roles",
       values.size > 0 ? Array.from(values) : undefined
     );
+  };
+
+  const handleEdit = (user: User) => {
+    setIsOpen(true);
+    setUser(user);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setUser(undefined);
+  };
+
+  const deleteMutation = useMutation({
+    mutationFn: fetchDeleteMutation,
+    onSuccess: () => {
+      refetch();
+      toast.success(`Pengguna berhasil dihapus`);
+    },
+    onError: (error: Error) => {
+      toast.error(error ? error.message : "Operasi gagal");
+    },
+  });
+
+  const handleDelete = async (id: string) => {
+    const result = await showConfirmation({
+      title: "Apakah anda yakin?",
+      description: "Aksi ini tidak dapat dibatalkan",
+      confirmText: "Ya",
+      cancelText: "Batal",
+      variant: "destructive",
+    });
+
+    if (result.confirmed) {
+      deleteMutation.mutate(id);
+    }
   };
 
   return (
@@ -77,7 +133,7 @@ export default function UserPage() {
               <div className="relative max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search users..."
+                  placeholder="Cari pengguna"
                   value={searchInput}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-9 h-8"
@@ -92,14 +148,20 @@ export default function UserPage() {
               />
             </div>
 
-            <Button size="sm" className="h-8">
+            <Button
+              size="sm"
+              className="h-8"
+              onClick={() => {
+                setIsOpen(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Tambah Pengguna
             </Button>
           </div>
 
           <DataTable
-            columns={columns}
+            columns={columns({ handleEdit, handleDelete })}
             data={data}
             pageCount={pageCount}
             pagination={pagination}
@@ -108,6 +170,19 @@ export default function UserPage() {
           />
         </CardContent>
       </Card>
+
+      {/* Sheet */}
+      <Sheet open={isOpen} onOpenChange={handleClose}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>
+              {user ? "Ubah Pengguna" : "Tambah Pengguna"}
+            </SheetTitle>
+          </SheetHeader>
+          <SheetDescription />
+          <FormUser handleClose={handleClose} user={user} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

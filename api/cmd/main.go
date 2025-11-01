@@ -11,6 +11,7 @@ func main() {
 	app := config.NewFiber(viperConfig)
 	db := config.NewDatabase(viperConfig, log, false)
 	validator := config.NewValidator(viperConfig)
+	redis := config.NewRedis(viperConfig)
 
 	//app config
 	config.Bootstrap(&config.BootstrapConfig{
@@ -19,6 +20,7 @@ func main() {
 		DB:       db,
 		Config:   viperConfig,
 		Validate: validator,
+		Redis:    redis,
 	})
 
 	webPort := viperConfig.GetInt("web.port")

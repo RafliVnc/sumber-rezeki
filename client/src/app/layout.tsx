@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { AppProvider } from "@/context/app-context";
+import { ConfirmationDialogProvider } from "@/context/dialog-context";
 
 const nunitoSans = Nunito_Sans({
   variable: "--font-geist-sans",
@@ -24,10 +25,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <AppProvider>
-        <body className={`${nunitoSans.variable} antialiased`}>
-          <Providers>{children}</Providers>
-          <Toaster richColors position="top-right" />
-        </body>
+        <ConfirmationDialogProvider>
+          <body className={`${nunitoSans.variable} antialiased`}>
+            <Providers>{children}</Providers>
+            <Toaster richColors position="top-right" />
+          </body>
+        </ConfirmationDialogProvider>
       </AppProvider>
     </html>
   );

@@ -21,7 +21,10 @@ export default function LoginPage() {
           <div className="flex flex-col gap-4">
             <article>
               <h1 className="text-2xl font-bold">Masuk</h1>
-              <p>-</p>
+              <p>
+                Masukkan username/ No HP dan kata sandi untuk mengakses akun
+                Anda
+              </p>
             </article>
             <Form />
           </div>

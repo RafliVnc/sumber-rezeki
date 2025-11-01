@@ -4,5 +4,7 @@ export const UserDummy: User = {
   id: "",
   name: "",
   username: "",
-  role: UserRole.SUPER_ADMIN,
+  phone: "",
+  role: UserRole.OWNER,
+  createdAt: new Date(),
 };

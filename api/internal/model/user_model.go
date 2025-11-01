@@ -8,12 +8,10 @@ import (
 )
 
 type FindAllUserRequest struct {
-	Name     string          `json:"name" validate:"omitempty,max=100"`
-	Username string          `json:"username" validate:"omitempty,max=100"`
-	Phone    string          `json:"phone" validate:"omitempty"`
-	Roles    []enum.UserRole `json:"roles" validate:"omitempty,userrole"`
-	Page     int             `json:"page"`
-	PerPage  int             `json:"perPage" validate:"max=100"`
+	Search  string          `json:"search" validate:"omitempty,max=100"`
+	Roles   []enum.UserRole `json:"roles" validate:"omitempty,userrole"`
+	Page    int             `json:"page"`
+	PerPage int             `json:"perPage" validate:"max=100"`
 }
 
 type RegisterUserRequest struct {

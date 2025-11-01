@@ -9,10 +9,13 @@ import (
 )
 
 type RouteConfig struct {
-	App            *fiber.App
-	UserController *http.UserController
-	AuthMiddleware fiber.Handler
-	Config         *viper.Viper
+	App             *fiber.App
+	UserController  *http.UserController
+	SalesController *http.SalesController
+	HelloController *http.HelloController
+	RouteController *http.RouteController
+	AuthMiddleware  fiber.Handler
+	Config          *viper.Viper
 }
 
 func (c *RouteConfig) Setup() {
@@ -34,9 +37,22 @@ func (c *RouteConfig) SetupAuthRoute() {
 	c.App.Use(c.AuthMiddleware)
 
 	//user
+	c.App.Get("/api/hello", c.HelloController.SayHello)
 	c.App.Get("/api/current", c.UserController.Current)
 	c.App.Get("/api/users", c.UserController.FindAll)
 	c.App.Post("/api/users", c.UserController.Register)
 	c.App.Put("/api/users/:id", c.UserController.Update)
 	c.App.Delete("/api/users/:id", c.UserController.Delete)
+
+	// sales
+	c.App.Post("/api/sales", c.SalesController.Create)
+	c.App.Get("/api/sales", c.SalesController.FindAll)
+	c.App.Put("/api/sales/:id", c.SalesController.Update)
+	c.App.Delete("/api/sales/:id", c.SalesController.Delete)
+
+	// route
+	c.App.Get("/api/routes", c.RouteController.FindAll)
+	c.App.Post("/api/routes", c.RouteController.Create)
+	c.App.Put("/api/routes/:id", c.RouteController.Update)
+	c.App.Delete("/api/routes/:id", c.RouteController.Delete)
 }

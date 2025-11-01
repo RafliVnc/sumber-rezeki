@@ -2,36 +2,25 @@ package middleware
 
 import (
 	"api/internal/model"
-	"api/internal/usecase"
 	"api/internal/utils"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/redis/go-redis/v9"
+	"github.com/sirupsen/logrus"
 )
 
-func NewAuth(userUseCase *usecase.UserUseCaseImpl, tokenUtil *utils.TokenUtil) fiber.Handler {
+func NewAuth(tokenUtil *utils.TokenUtil, log *logrus.Logger, redis *redis.Client) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		request := &model.VerifyUserRequest{Token: ctx.Get("Authorization", "NOT_FOUND")}
-		userUseCase.Log.Debugf("Authorization : %s", request.Token)
+		log.Debugf("Authorization : %s", request.Token)
 
-		//auth, err := userUseCase.Verify(ctx.UserContext(), request)
-		//if err != nil {
-		//	userUseCase.Log.Warnf("Failed find user by token : %+v", err)
-		//	return fiber.ErrUnauthorized
-		//}
-
-		auth, err := tokenUtil.ParseToken(ctx.UserContext(), request.Token)
+		userAuth, err := tokenUtil.ParseToken(ctx.UserContext(), request.Token)
 		if err != nil {
-			userUseCase.Log.Warnf("Failed find user by token : %+v", err)
+			log.Warnf("Failed find user by token : %+v", err)
 			return fiber.ErrUnauthorized
 		}
 
-		userAuth, err := userUseCase.Verify(ctx.UserContext(), &model.Auth{ID: auth.ID})
-		if err != nil {
-			userUseCase.Log.Warnf("Failed find user by token : %+v", err)
-			return fiber.ErrUnauthorized
-		}
-
-		userUseCase.Log.Debugf("User : %+v", auth.ID)
+		log.Debugf("User : %+v", userAuth.ID)
 		ctx.Locals("auth", userAuth)
 		return ctx.Next()
 	}

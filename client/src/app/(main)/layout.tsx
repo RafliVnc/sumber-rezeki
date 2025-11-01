@@ -8,7 +8,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <AppSidebar />
       <SidebarInset>
         <Header />
-        <main>{children}</main>
+        {children}
       </SidebarInset>
     </SidebarProvider>
   );

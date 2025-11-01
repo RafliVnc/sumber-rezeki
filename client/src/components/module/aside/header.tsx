@@ -23,13 +23,13 @@ export default function Header() {
   const { user } = app;
 
   return (
-    <header className="bg-white sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-2">
+    <header className="bg-white sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-2 z-50">
       <div className="flex flex-1">
-        <SidebarTrigger className="-ml-1" />
-        <Separator
+        <SidebarTrigger className="-ml-1 rounded-full" />
+        {/* <Separator
           orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-4"
-        />
+          className="mr-2 data-[orientation=vertical]:h-6"
+        /> */}
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

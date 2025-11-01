@@ -24,7 +24,9 @@ import { api } from "@/lib/api";
 import { useApp } from "@/context/app-context";
 import Cookies from "js-cookie";
 
-const postAuth = async (values: z.infer<typeof AuthValidation.MAIN>) => {
+const postAuth = async (
+  values: z.infer<typeof AuthValidation.MAIN>
+): Promise<{ data: User; token: string }> => {
   const res = await api<{ data: User; token: string }>({
     url: "login",
     method: "POST",
