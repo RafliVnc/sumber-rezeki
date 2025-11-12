@@ -11,6 +11,7 @@ import {
   VisibilityState,
   PaginationState,
   OnChangeFn,
+  Table as TanstackTable,
 } from "@tanstack/react-table";
 
 import {
@@ -34,7 +35,7 @@ interface DataTableProps<TData, TValue> {
   columnFilters?: ColumnFiltersState;
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
   isLoading?: boolean;
-  onTableReady?: (table: any) => void;
+  onTableReady?: (table: TanstackTable<TData>) => void;
 }
 
 export function DataTable<TData, TValue>({

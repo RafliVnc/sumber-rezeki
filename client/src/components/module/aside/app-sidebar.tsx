@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { SquareTerminal, User } from "lucide-react";
+import { User } from "lucide-react";
 
 import {
   Sidebar,
@@ -16,36 +16,10 @@ import { NavUser } from "./nav-user";
 
 // This is sample data.
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "logo.svg",
-  },
   navMain: [
-    // {
-    //   title: "Settings",
-    //   url: "#",
-    //   icon: SquareTerminal,
-    //   items: [
-    //     {
-    //       title: "salses",
-    //       url: "/sales",
-    //     },
-    //   ],
-    // },
-    {
-      title: "Pengguna",
-      url: "/user",
-      icon: User,
-    },
     {
       title: "Sales",
       url: "/sales",
-      icon: User,
-    },
-    {
-      title: "Rute",
-      url: "/route",
       icon: User,
     },
   ],
@@ -61,7 +35,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

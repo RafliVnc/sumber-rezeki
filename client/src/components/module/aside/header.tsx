@@ -11,8 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useApp } from "@/context/app-context";
 import { ConvertUserRole } from "@/lib/utils";
 import { Key, LogOut } from "lucide-react";
@@ -25,32 +25,38 @@ export default function Header() {
   return (
     <header className="bg-white sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-2 z-50">
       <div className="flex flex-1">
-        <SidebarTrigger className="-ml-1 rounded-full" />
-        {/* <Separator
-          orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-6"
-        /> */}
+        <SidebarTrigger className="md:-ml-[17px] rounded-full" />
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            size="lg"
-            variant="ghost"
-            className="data-[state=open]:!bg-primary/10 data-[state=open]:text-text-black "
-          >
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.name}</span>
-              <span className="truncate text-xs text-primary">
-                {ConvertUserRole(user.role)}
-              </span>
+          {!user.id ? (
+            <div className="flex mr-4 gap-1">
+              <div className="grid flex-1 text-left gap-1.5">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-lg" />
             </div>
-            <Avatar className="h-8 w-8 rounded-lg border-2 border-primary/30">
-              <AvatarImage src={""} alt={user.name} />
-              <AvatarFallback className="rounded-lg">
-                {user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </Button>
+          ) : (
+            <Button
+              size="lg"
+              variant="ghost"
+              className="data-[state=open]:!bg-primary/10 data-[state=open]:text-text-black"
+            >
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate text-xs text-primary">
+                  {ConvertUserRole(user.role)}
+                </span>
+              </div>
+              <Avatar className="h-8 w-8 rounded-lg border-2 border-primary/30">
+                <AvatarImage src={""} alt={user.name} />
+                <AvatarFallback className="rounded-lg">
+                  {user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent
           className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"

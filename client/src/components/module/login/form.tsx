@@ -36,7 +36,7 @@ const postAuth = async (
   return res;
 };
 
-export default function form() {
+export default function FormLogin() {
   const router = useRouter();
   const app = useApp();
 
@@ -57,7 +57,7 @@ export default function form() {
 
       app.setUser(data);
       // rederect
-      router.push("/user");
+      router.push("/settings/user");
       toast.success("Selamat datang kembali!");
     },
     onError: (error: unknown) => {

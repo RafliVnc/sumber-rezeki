@@ -11,10 +11,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DataTableColumnHeader } from "../../../ui/table/data-table-column-header";
 import { ConvertUserRole } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { UserRole } from "@/type/enum/user-role";
+import { DataTableColumnHeader } from "@/components/ui/table/data-table-column-header";
 
 export const columns = ({
   handleEdit,
@@ -45,10 +45,10 @@ export const columns = ({
         <Badge
           variant={
             row.original.role === UserRole.OWNER
-              ? "orange"
+              ? "blue"
               : row.original.role === UserRole.WAREHOUSE_HEAD
-              ? "default"
-              : "green"
+              ? "green"
+              : "purple"
           }
         >
           {ConvertUserRole(row.original.role)}

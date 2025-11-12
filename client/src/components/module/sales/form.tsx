@@ -3,7 +3,7 @@
 import { api } from "@/lib/api";
 import { SalesValidation } from "@/validation/sales-validation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -22,7 +22,7 @@ import { Loader2 } from "lucide-react";
 import { SalesDummy } from "@/dummy/sales-dummy";
 import { MultiSelect } from "@/components/ui/multiple-select";
 
-const ApiFormSales = async ({
+const apiFormSales = async ({
   values,
   isEdit,
   id,
@@ -40,11 +40,14 @@ const ApiFormSales = async ({
   return res;
 };
 
-const routeList = [
-  { value: "1", label: "Satu" },
-  { value: "2", label: "Dua" },
-  { value: "3", label: "tiga" },
-];
+const apiGetRoute = async (): Promise<{ data: Route[] }> => {
+  const res = await api<{ data: Route[] }>({
+    url: "routes",
+    method: "GET",
+  });
+
+  return res;
+};
 
 export default function FormSales({
   handleClose,
@@ -62,16 +65,27 @@ export default function FormSales({
     routeIds: sales?.Routes?.map((r) => r.id) || [],
   };
 
+  const { data: routes, isLoading } = useQuery({
+    queryKey: ["form-sales-routes"],
+    queryFn: apiGetRoute,
+  });
+
+  const routeList =
+    routes?.data?.map((r) => ({
+      value: r.id.toString(),
+      label: r.name,
+    })) || [];
+
   const form = useForm<z.infer<typeof SalesValidation.MAIN>>({
     resolver: zodResolver(SalesValidation.MAIN),
     defaultValues: dummyFormSales,
   });
 
   const submitMutation = useMutation({
-    mutationFn: ApiFormSales,
+    mutationFn: apiFormSales,
     onSuccess: () => {
       toast.success("Sales berhasil ditambahkan");
-      queryClient.invalidateQueries({ queryKey: ["saless"] });
+      queryClient.invalidateQueries({ queryKey: ["sales"] });
       form.reset();
       handleClose();
     },
@@ -137,6 +151,8 @@ export default function FormSales({
                 <FormControl>
                   <MultiSelect
                     options={routeList}
+                    maxCount={6}
+                    isLoading={isLoading}
                     defaultValue={field.value ? field.value.map(String) : []}
                     onValueChange={(val) => field.onChange(val.map(Number))}
                     placeholder="Pilih rute"

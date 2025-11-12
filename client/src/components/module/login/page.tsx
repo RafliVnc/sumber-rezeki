@@ -1,6 +1,6 @@
 import React from "react";
-import Form from "./form";
 import Image from "next/image";
+import FormLogin from "./form";
 
 export default function LoginPage() {
   return (
@@ -21,12 +21,9 @@ export default function LoginPage() {
           <div className="flex flex-col gap-4">
             <article>
               <h1 className="text-2xl font-bold">Masuk</h1>
-              <p>
-                Masukkan username/ No HP dan kata sandi untuk mengakses akun
-                Anda
-              </p>
+              <p>Selamat Datang Kembali 👋🏻</p>
             </article>
-            <Form />
+            <FormLogin />
           </div>
         </div>
       </div>

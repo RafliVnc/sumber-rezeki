@@ -6,6 +6,7 @@ import {
   ChevronDown,
   XIcon,
   WandSparkles,
+  Loader2,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -159,12 +160,6 @@ interface MultiSelectProps
   modalPopover?: boolean;
 
   /**
-   * If true, renders the multi-select component as a child of another component.
-   * Optional, defaults to false.
-   */
-  asChild?: boolean;
-
-  /**
    * Additional class names to apply custom styles to the multi-select component.
    * Optional, can be used to add custom styles.
    */
@@ -276,6 +271,19 @@ interface MultiSelectProps
    * Optional, defaults to false.
    */
   closeOnSelect?: boolean;
+
+  /**
+   * If true, shows a loading state with spinner.
+   * Disables interaction and shows loading indicator.
+   * Optional, defaults to false.
+   */
+  isLoading?: boolean;
+
+  /**
+   * Custom loading text to display when isLoading is true.
+   * Optional, defaults to "Memuat...".
+   */
+  loadingText?: string;
 }
 
 /**
@@ -316,7 +324,6 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
       animationConfig,
       maxCount = 3,
       modalPopover = false,
-      asChild = false,
       className,
       hideSelectAll = false,
       searchable = true,
@@ -331,6 +338,8 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
       deduplicateOptions = false,
       resetOnDefaultValueChange = true,
       closeOnSelect = false,
+      isLoading = false,
+      loadingText = "Memuat...",
       ...props
     },
     ref
@@ -609,16 +618,11 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
     ) => {
       if (event.key === "Enter") {
         setIsPopoverOpen(true);
-      } else if (event.key === "Backspace" && !event.currentTarget.value) {
-        const newSelectedValues = [...selectedValues];
-        newSelectedValues.pop();
-        setSelectedValues(newSelectedValues);
-        onValueChange(newSelectedValues);
       }
     };
 
     const toggleOption = (optionValue: string) => {
-      if (disabled) return;
+      if (disabled || isLoading) return;
       const option = getOptionByValue(optionValue);
       if (option?.disabled) return;
       const newSelectedValues = selectedValues.includes(optionValue)
@@ -632,18 +636,18 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
     };
 
     const handleClear = () => {
-      if (disabled) return;
+      if (disabled || isLoading) return;
       setSelectedValues([]);
       onValueChange([]);
     };
 
     const handleTogglePopover = () => {
-      if (disabled) return;
+      if (disabled || isLoading) return;
       setIsPopoverOpen((prev) => !prev);
     };
 
     const clearExtraOptions = () => {
-      if (disabled) return;
+      if (disabled || isLoading) return;
       const newSelectedValues = selectedValues.slice(
         0,
         responsiveSettings.maxCount
@@ -653,7 +657,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
     };
 
     const toggleAll = () => {
-      if (disabled) return;
+      if (disabled || isLoading) return;
       const allOptions = getAllOptions().filter((option) => !option.disabled);
       if (selectedValues.length === allOptions.length) {
         handleClear();
@@ -797,7 +801,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
               ref={buttonRef}
               {...props}
               onClick={handleTogglePopover}
-              disabled={disabled}
+              disabled={disabled || isLoading}
               role="combobox"
               aria-expanded={isPopoverOpen}
               aria-haspopup="listbox"
@@ -806,12 +810,13 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
               aria-label={`Multi-select: ${selectedValues.length} of ${
                 getAllOptions().length
               } options selected. ${placeholder}`}
+              aria-busy={isLoading}
               className={cn(
                 "flex p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit [&_svg]:pointer-events-auto",
                 autoSize ? "w-auto" : "w-full",
                 responsiveSettings.compactMode && "min-h-8 text-sm",
                 screenSize === "mobile" && "min-h-12 text-base",
-                disabled && "opacity-50 cursor-not-allowed",
+                (disabled || isLoading) && "opacity-50 cursor-not-allowed",
                 className
               )}
               style={{
@@ -819,7 +824,14 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                 maxWidth: `min(${widthConstraints.maxWidth}, 100%)`,
               }}
             >
-              {selectedValues.length > 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center w-full gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {loadingText}
+                  </span>
+                </div>
+              ) : selectedValues.length > 0 ? (
                 <div className="flex justify-between items-center w-full">
                   <div
                     className={cn(
@@ -951,7 +963,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                       >
                         {`+ ${
                           selectedValues.length - responsiveSettings.maxCount
-                        } more`}
+                        } lagi`}
                         <XCircle
                           className={cn(
                             "ml-2 h-4 w-4 cursor-pointer",
@@ -1037,6 +1049,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                   onValueChange={setSearchValue}
                   aria-label="Search through available options"
                   aria-describedby={`${multiSelectId}-search-help`}
+                  disabled={isLoading}
                 />
               )}
               {searchable && (
@@ -1050,118 +1063,44 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                   screenSize === "mobile" && "max-h-[50vh]",
                   "overscroll-behavior-y-contain"
                 )}
+                onWheel={(e) => {
+                  e.stopPropagation();
+                }}
               >
-                <CommandEmpty>
-                  {emptyIndicator || "No results found."}
-                </CommandEmpty>{" "}
-                {!hideSelectAll && !searchValue && (
-                  <CommandGroup>
-                    <CommandItem
-                      key="all"
-                      onSelect={toggleAll}
-                      role="option"
-                      aria-selected={
-                        selectedValues.length ===
-                        getAllOptions().filter((opt) => !opt.disabled).length
-                      }
-                      aria-label={`Select all ${
-                        getAllOptions().length
-                      } options`}
-                      className="cursor-pointer"
-                    >
-                      <div
-                        className={cn(
-                          "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                          selectedValues.length ===
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-8 px-4 gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground text-center">
+                      {loadingText}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <CommandEmpty>
+                      {emptyIndicator || "Data tidak ditemukan"}
+                    </CommandEmpty>
+                    {!hideSelectAll && !searchValue && (
+                      <CommandGroup>
+                        <CommandItem
+                          key="all"
+                          onSelect={toggleAll}
+                          role="option"
+                          aria-selected={
+                            selectedValues.length ===
                             getAllOptions().filter((opt) => !opt.disabled)
                               .length
-                            ? "bg-primary text-primary-foreground"
-                            : "opacity-50 [&_svg]:invisible"
-                        )}
-                        aria-hidden="true"
-                      >
-                        <CheckIcon className="h-4 w-4 text-white" />
-                      </div>
-                      <span>
-                        (Pilih Semua
-                        {getAllOptions().length > 20
-                          ? ` - ${getAllOptions().length} options`
-                          : ""}
-                        )
-                      </span>
-                    </CommandItem>
-                  </CommandGroup>
-                )}
-                {isGroupedOptions(filteredOptions) ? (
-                  filteredOptions.map((group) => (
-                    <CommandGroup key={group.heading} heading={group.heading}>
-                      {group.options.map((option) => {
-                        const isSelected = selectedValues.includes(
-                          option.value
-                        );
-                        return (
-                          <CommandItem
-                            key={option.value}
-                            onSelect={() => toggleOption(option.value)}
-                            role="option"
-                            aria-selected={isSelected}
-                            aria-disabled={option.disabled}
-                            aria-label={`${option.label}${
-                              isSelected ? ", selected" : ", not selected"
-                            }${option.disabled ? ", disabled" : ""}`}
-                            className={cn(
-                              "cursor-pointer",
-                              option.disabled && "opacity-50 cursor-not-allowed"
-                            )}
-                            disabled={option.disabled}
-                          >
-                            <div
-                              className={cn(
-                                "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                isSelected
-                                  ? "bg-primary text-primary-foreground"
-                                  : "opacity-50 [&_svg]:invisible"
-                              )}
-                              aria-hidden="true"
-                            >
-                              <CheckIcon className="h-4 w-4 text-white" />
-                            </div>
-                            {option.icon && (
-                              <option.icon
-                                className="mr-2 h-4 w-4 text-muted-foreground"
-                                aria-hidden="true"
-                              />
-                            )}
-                            <span>{option.label}</span>
-                          </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                  ))
-                ) : (
-                  <CommandGroup>
-                    {filteredOptions.map((option) => {
-                      const isSelected = selectedValues.includes(option.value);
-                      return (
-                        <CommandItem
-                          key={option.value}
-                          onSelect={() => toggleOption(option.value)}
-                          role="option"
-                          aria-selected={isSelected}
-                          aria-disabled={option.disabled}
-                          aria-label={`${option.label}${
-                            isSelected ? ", selected" : ", not selected"
-                          }${option.disabled ? ", disabled" : ""}`}
-                          className={cn(
-                            "cursor-pointer",
-                            option.disabled && "opacity-50 cursor-not-allowed"
-                          )}
-                          disabled={option.disabled}
+                          }
+                          aria-label={`Select all ${
+                            getAllOptions().length
+                          } options`}
+                          className="cursor-pointer"
                         >
                           <div
                             className={cn(
                               "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                              isSelected
+                              selectedValues.length ===
+                                getAllOptions().filter((opt) => !opt.disabled)
+                                  .length
                                 ? "bg-primary text-primary-foreground"
                                 : "opacity-50 [&_svg]:invisible"
                             )}
@@ -1169,47 +1108,143 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
                           >
                             <CheckIcon className="h-4 w-4 text-white" />
                           </div>
-                          {option.icon && (
-                            <option.icon
-                              className="mr-2 h-4 w-4 text-muted-foreground"
-                              aria-hidden="true"
-                            />
-                          )}
-                          <span>{option.label}</span>
+                          <span>
+                            (Pilih Semua
+                            {getAllOptions().length > 20
+                              ? ` - ${getAllOptions().length} options`
+                              : ""}
+                            )
+                          </span>
                         </CommandItem>
-                      );
-                    })}
-                  </CommandGroup>
-                )}
-                <CommandSeparator />
-                <CommandGroup>
-                  <div className="flex items-center justify-between">
-                    {selectedValues.length > 0 && (
-                      <>
-                        <CommandItem
-                          onSelect={handleClear}
-                          className="flex-1 justify-center cursor-pointer"
-                        >
-                          Hapus
-                        </CommandItem>
-                        <Separator
-                          orientation="vertical"
-                          className="flex min-h-6 h-full"
-                        />
-                      </>
+                      </CommandGroup>
                     )}
-                    <CommandItem
-                      onSelect={() => setIsPopoverOpen(false)}
-                      className="flex-1 justify-center cursor-pointer max-w-full"
-                    >
-                      Tutup
-                    </CommandItem>
-                  </div>
-                </CommandGroup>
+                    {isGroupedOptions(filteredOptions) ? (
+                      filteredOptions.map((group) => (
+                        <CommandGroup
+                          key={group.heading}
+                          heading={group.heading}
+                        >
+                          {group.options.map((option) => {
+                            const isSelected = selectedValues.includes(
+                              option.value
+                            );
+                            return (
+                              <CommandItem
+                                key={option.value}
+                                onSelect={() => toggleOption(option.value)}
+                                role="option"
+                                aria-selected={isSelected}
+                                aria-disabled={option.disabled}
+                                aria-label={`${option.label}${
+                                  isSelected ? ", selected" : ", not selected"
+                                }${option.disabled ? ", disabled" : ""}`}
+                                className={cn(
+                                  "cursor-pointer",
+                                  option.disabled &&
+                                    "opacity-50 cursor-not-allowed"
+                                )}
+                                disabled={option.disabled}
+                              >
+                                <div
+                                  className={cn(
+                                    "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                    isSelected
+                                      ? "bg-primary text-primary-foreground"
+                                      : "opacity-50 [&_svg]:invisible"
+                                  )}
+                                  aria-hidden="true"
+                                >
+                                  <CheckIcon className="h-4 w-4 text-white" />
+                                </div>
+                                {option.icon && (
+                                  <option.icon
+                                    className="mr-2 h-4 w-4 text-muted-foreground"
+                                    aria-hidden="true"
+                                  />
+                                )}
+                                <span>{option.label}</span>
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      ))
+                    ) : (
+                      <CommandGroup>
+                        {filteredOptions.map((option) => {
+                          const isSelected = selectedValues.includes(
+                            option.value
+                          );
+                          return (
+                            <CommandItem
+                              key={option.value}
+                              onSelect={() => toggleOption(option.value)}
+                              role="option"
+                              aria-selected={isSelected}
+                              aria-disabled={option.disabled}
+                              aria-label={`${option.label}${
+                                isSelected ? ", selected" : ", not selected"
+                              }${option.disabled ? ", disabled" : ""}`}
+                              className={cn(
+                                "cursor-pointer",
+                                option.disabled &&
+                                  "opacity-50 cursor-not-allowed"
+                              )}
+                              disabled={option.disabled}
+                            >
+                              <div
+                                className={cn(
+                                  "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                                  isSelected
+                                    ? "bg-primary text-primary-foreground"
+                                    : "opacity-50 [&_svg]:invisible"
+                                )}
+                                aria-hidden="true"
+                              >
+                                <CheckIcon className="h-4 w-4 text-white" />
+                              </div>
+                              {option.icon && (
+                                <option.icon
+                                  className="mr-2 h-4 w-4 text-muted-foreground"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <span>{option.label}</span>
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    )}
+                    <CommandSeparator />
+                    <CommandGroup>
+                      <div className="flex items-center justify-between">
+                        {selectedValues.length > 0 && (
+                          <>
+                            <CommandItem
+                              onSelect={handleClear}
+                              className="flex-1 justify-center cursor-pointer"
+                            >
+                              Hapus
+                            </CommandItem>
+                            <Separator
+                              orientation="vertical"
+                              className="flex min-h-6 h-full"
+                            />
+                          </>
+                        )}
+                        <CommandItem
+                          onSelect={() => setIsPopoverOpen(false)}
+                          className="flex-1 justify-center cursor-pointer max-w-full"
+                        >
+                          Tutup
+                        </CommandItem>
+                      </div>
+                    </CommandGroup>
+                  </>
+                )}
               </CommandList>
             </Command>
           </PopoverContent>
-          {animation > 0 && selectedValues.length > 0 && (
+          {animation > 0 && selectedValues.length > 0 && !isLoading && (
             <WandSparkles
               className={cn(
                 "cursor-pointer my-2 text-foreground bg-background w-3 h-3",

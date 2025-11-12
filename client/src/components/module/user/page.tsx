@@ -1,13 +1,12 @@
 "use client";
 
-import { DynamicBreadcrumb } from "@/components/ui/breadcrumb/dynamic-breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
 import { DataTableFacetedFilter } from "@/components/ui/table/data-table-faceted-filter";
 import { DataTable } from "@/components/ui/table/data-table";
-import { columns } from "./table/columns";
+import { columns } from "./columns";
 import { api } from "@/lib/api";
 import { UserRole } from "@/type/enum/user-role";
 import { useTableData } from "@/hooks/use-table-data";
@@ -36,7 +35,17 @@ interface UserFilters {
   department?: string;
 }
 
-const fetchUsers = async ({ perPage, page, search, filters }: any) => {
+const fetchUsers = async ({
+  perPage,
+  page,
+  search,
+  filters,
+}: {
+  perPage: number;
+  page: number;
+  search?: string;
+  filters?: UserFilters;
+}) => {
   return await api<{ data: User[]; paging: PageMetadata }>({
     url: "users",
     params: {
@@ -121,11 +130,8 @@ export default function UserPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1">Pengguna</h1>
-      <DynamicBreadcrumb />
-
       {/* Table card */}
-      <Card className="mt-4">
+      <Card>
         <CardContent>
           {/* Toolbar */}
           <div className="flex items-center justify-between gap-4 mb-4">

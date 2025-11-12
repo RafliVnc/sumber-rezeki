@@ -60,7 +60,7 @@ export default function SalesPage() {
     handleSearchChange,
     refetch,
   } = useTableData<Sales>({
-    queryKey: "saless",
+    queryKey: "sales",
     queryFn: fetchSales,
   });
 
@@ -85,11 +85,11 @@ export default function SalesPage() {
     },
   });
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number, name: string) => {
     const result = await showConfirmation({
-      title: "Apakah anda yakin?",
-      description: "Aksi ini tidak dapat dibatalkan",
-      confirmText: "Ya",
+      title: `Menghapus Sales ${name}`,
+      description: `Apakah anda ingin menghapus Sales ${name}?`,
+      confirmText: "Hapus",
       cancelText: "Batal",
       variant: "destructive",
     });

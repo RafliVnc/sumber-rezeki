@@ -1,14 +1,25 @@
 "use client";
 
-import { DynamicBreadcrumb } from "@/components/ui/breadcrumb/dynamic-breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/ui/table/data-table";
 import { useTableData } from "@/hooks/use-table-data";
 import { api } from "@/lib/api";
-import { Search } from "lucide-react";
-import React from "react";
+import { Plus, Search } from "lucide-react";
+import React, { useState } from "react";
 import { columns } from "./columns";
+import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import FormRoute from "./form";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useConfirmationDialog } from "@/context/dialog-context";
 
 const fetchRoutes = async ({
   perPage,
@@ -29,7 +40,15 @@ const fetchRoutes = async ({
   });
 };
 
+const fetchDeleteMutation = async (id: number): Promise<boolean> => {
+  return await api({ url: `routes/${id}`, method: "DELETE" });
+};
+
 export default function RoutePage() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [route, setRoute] = useState<Route | undefined>(undefined);
+  const { showConfirmation } = useConfirmationDialog();
+
   const {
     data,
     pageCount,
@@ -44,22 +63,44 @@ export default function RoutePage() {
     queryFn: fetchRoutes,
   });
 
-  //   TODO: Handle edit and delete
   const handleEdit = (routes: Route) => {
-    console.log(routes);
+    setIsOpen(true);
+    setRoute(routes);
   };
 
-  const handleDelete = async (id: number) => {
-    console.log(id);
+  const deleteMutation = useMutation({
+    mutationFn: fetchDeleteMutation,
+    onSuccess: () => {
+      refetch();
+      toast.success(`Rute berhasil dihapus`);
+    },
+    onError: (error: Error) => {
+      toast.error(error ? error.message : "Operasi gagal");
+    },
+  });
+
+  const handleDelete = async (id: number, name: string) => {
+    const result = await showConfirmation({
+      title: `Menghapus Rute ${name}`,
+      description: `Apakah anda ingin menghapus rute ${name}?`,
+      confirmText: "Hapus",
+      cancelText: "Batal",
+      variant: "destructive",
+    });
+
+    if (result.confirmed) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
   };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-1">Rute</h1>
-      <DynamicBreadcrumb />
-
       {/* Table card */}
-      <Card className="mt-4">
+      <Card>
         <CardContent>
           {/* Toolbar */}
           <div className="flex items-center justify-between gap-4 mb-4">
@@ -75,7 +116,7 @@ export default function RoutePage() {
               </div>
             </div>
 
-            {/* <Button
+            <Button
               size="sm"
               className="h-8"
               onClick={() => {
@@ -84,7 +125,7 @@ export default function RoutePage() {
             >
               <Plus className="h-4 w-4 mr-2" />
               Tambah Rute
-            </Button> */}
+            </Button>
           </div>
 
           <DataTable
@@ -97,6 +138,17 @@ export default function RoutePage() {
           />
         </CardContent>
       </Card>
+
+      {/* Sheet */}
+      <Sheet open={isOpen} onOpenChange={handleClose}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{route ? "Ubah Rute" : "Tambah Rute"}</SheetTitle>
+          </SheetHeader>
+          <SheetDescription />
+          <FormRoute handleClose={handleClose} route={route} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

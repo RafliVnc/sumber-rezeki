@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, Fragment } from "react";
 
 import {
   Breadcrumb,
@@ -21,6 +23,7 @@ import {
 const breadcrumbTranslations: Record<string, string> = {
   user: "Pengguna",
   route: "Rute",
+  settings: "Pengaturan",
 };
 
 export const translateBreadcrumb = (segment: string): string => {
@@ -107,19 +110,25 @@ export function DynamicBreadcrumb({
           </>
         )}
 
-        {visibleItems.map((item, index) => (
-          <div key={item.path} className="flex items-center">
+        {visibleItems.map((item) => (
+          <Fragment key={item.path}>
             <BreadcrumbItem>
               {item.isLast ? (
                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
               ) : (
                 <BreadcrumbLink asChild>
-                  <Link href={item.path}>{item.label}</Link>
+                  <Link
+                    href={
+                      item.path === "/settings" ? "/settings/user" : item.path
+                    }
+                  >
+                    {item.label}
+                  </Link>
                 </BreadcrumbLink>
               )}
             </BreadcrumbItem>
             {!item.isLast && <BreadcrumbSeparator />}
-          </div>
+          </Fragment>
         ))}
       </BreadcrumbList>
     </Breadcrumb>

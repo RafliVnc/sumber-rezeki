@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/use-debounce";
 
-interface UseTableDataOptions<TData, TFilters extends Record<string, any>> {
+interface UseTableDataOptions<TData, TFilters> {
   queryKey: string;
   queryFn: (params: {
     perPage: number;
@@ -14,7 +14,7 @@ interface UseTableDataOptions<TData, TFilters extends Record<string, any>> {
   debounceMs?: number;
 }
 
-export function useTableData<TData, TFilters extends Record<string, any> = {}>({
+export function useTableData<TData, TFilters = Record<string, never>>({
   queryKey,
   queryFn,
   initialPageSize = 10,
@@ -35,7 +35,7 @@ export function useTableData<TData, TFilters extends Record<string, any> = {}>({
     perPage: pagination.pageSize,
     page: pagination.pageIndex + 1,
     ...(debouncedSearch && { search: debouncedSearch }),
-    ...(Object.keys(filters).length > 0 && { filters }),
+    ...(Object.keys(filters as object).length > 0 && { filters }),
   };
 
   const { data, isFetching, isError, error, refetch } = useQuery({
@@ -61,7 +61,10 @@ export function useTableData<TData, TFilters extends Record<string, any> = {}>({
     resetToFirstPage();
   };
 
-  const handleFilterChange = (key: keyof TFilters, value: any) => {
+  const handleFilterChange = <K extends keyof TFilters>(
+    key: K,
+    value: TFilters[K]
+  ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     resetToFirstPage();
   };

@@ -1,20 +1,23 @@
 type Method = "GET" | "POST" | "PUT" | "DELETE";
 
-interface ApiOptions {
+interface ApiOptions<TBody = unknown> {
   url: string;
   method?: Method;
-  body?: Record<string, any>;
-  params?: Record<string, any>;
+  body?: TBody;
+  params?: Record<
+    string,
+    string | number | boolean | Array<string | number> | undefined | null
+  >;
 }
 
 const ApiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-export const api = async <T>({
+export const api = async <T, TBody = unknown>({
   url,
   method = "GET",
   body,
   params,
-}: ApiOptions): Promise<T> => {
+}: ApiOptions<TBody>): Promise<T> => {
   const token = localStorage.getItem("token");
 
   // Convert params ke query string dengan support array

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { ChevronsLeft, PanelLeftIcon } from "lucide-react";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -53,6 +53,7 @@ function useSidebar() {
   return context;
 }
 
+// TODO: Refactor this sidebar
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -299,6 +300,7 @@ function SidebarTrigger({
   ...props
 }: React.ComponentProps<typeof Button>) {
   const { toggleSidebar } = useSidebar();
+  const { state } = useSidebar();
 
   return (
     <Button
@@ -306,14 +308,14 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="default"
       size="icon"
-      className={cn("size-7", className)}
+      className={cn("size-5", className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
       }}
       {...props}
     >
-      <ChevronsLeft />
+      {state == "collapsed" ? <ChevronsRight /> : <ChevronsLeft />}
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
@@ -518,7 +520,7 @@ const sidebarMenuButtonVariants = cva(
   {
     variants: {
       variant: {
-        default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        default: "hover:bg-[#cce5f8] hover:text-primary",
         outline:
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },

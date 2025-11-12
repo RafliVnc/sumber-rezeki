@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { UserRole } from "@/type/enum/user-role";
 
-const ApiFormUser = async ({
+const apiFormUser = async ({
   values,
   isEdit,
   id,
@@ -75,7 +75,7 @@ export default function FormUser({
   });
 
   const submitMutation = useMutation({
-    mutationFn: ApiFormUser,
+    mutationFn: apiFormUser,
     onSuccess: () => {
       toast.success("Pengguna berhasil ditambahkan");
       queryClient.invalidateQueries({ queryKey: ["users"] });

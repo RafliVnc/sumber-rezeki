@@ -15,7 +15,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType>({
   user: UserDummy,
-  setUser: (_value: User) => {},
+  setUser: () => {},
   logout: () => {},
 });
 
@@ -50,7 +50,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     fetchUser();
-  }, []);
+  }, [router]);
 
   const logout = () => {
     localStorage.removeItem("token");
