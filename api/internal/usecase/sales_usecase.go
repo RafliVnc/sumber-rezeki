@@ -102,9 +102,9 @@ func (s *SalesUseCaseImpl) Create(ctx context.Context, request *model.CreateSale
 
 	//set sales
 	sales := &entity.Sales{
-		Name:   request.Name,
-		Phone:  request.Phone,
-		Routes: Routes,
+		EmployeeID: request.EmployeeID,
+		Phone:      request.Phone,
+		Routes:     Routes,
 	}
 
 	if err := s.SalesRepository.Create(tx, sales); err != nil {
@@ -115,7 +115,7 @@ func (s *SalesUseCaseImpl) Create(ctx context.Context, request *model.CreateSale
 	//commit
 	if err := tx.Commit().Error; err != nil {
 		s.Log.WithFields(logrus.Fields{
-			"name": request.Name,
+			"employeeId": request.EmployeeID,
 		}).Warnf("Failed commit to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
@@ -140,8 +140,17 @@ func (s *SalesUseCaseImpl) FindAll(ctx context.Context, request *model.FindAllSa
 
 	// convert to arry response
 	responses := make([]model.SalesResponse, len(sales))
-	for i, sales := range sales {
-		responses[i] = *converter.ToSalesResponse(&sales)
+	for i, s := range sales {
+		routeResponses := make([]model.RouteResponse, len(s.Routes))
+		for j, r := range s.Routes {
+			routeResponses[j] = *converter.ToRouteResponse(&r)
+		}
+
+		salesResp := converter.ToSalesResponse(&s)
+
+		salesResp.Routes = routeResponses
+
+		responses[i] = *salesResp
 	}
 
 	return responses, total, nil
@@ -225,9 +234,9 @@ func (s *SalesUseCaseImpl) Update(ctx context.Context, request *model.UpdateSale
 
 	//set sales
 	sales := &entity.Sales{
-		ID:    request.ID,
-		Name:  request.Name,
-		Phone: request.Phone,
+		ID:         request.ID,
+		EmployeeID: request.EmployeeID,
+		Phone:      request.Phone,
 	}
 
 	if err := s.SalesRepository.Update(tx, sales); err != nil {
@@ -238,7 +247,7 @@ func (s *SalesUseCaseImpl) Update(ctx context.Context, request *model.UpdateSale
 	//commit
 	if err := tx.Commit().Error; err != nil {
 		s.Log.WithFields(logrus.Fields{
-			"name": request.Name,
+			"EmployeeID": request.EmployeeID,
 		}).Warnf("Failed commit to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}

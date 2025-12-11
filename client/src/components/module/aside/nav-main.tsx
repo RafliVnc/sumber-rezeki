@@ -25,6 +25,7 @@ export function NavMain({
   items: {
     title: string;
     url: string;
+    activePath: string;
     icon?: LucideIcon;
     isActive?: boolean;
     items?: {
@@ -40,7 +41,7 @@ export function NavMain({
       <SidebarGroupLabel>Menu</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
-          const isActive = pathname === item.url;
+          const isActive = pathname.startsWith(item.activePath);
           const hasActiveChild = item.items?.some(
             (subItem) => pathname === subItem.url
           );

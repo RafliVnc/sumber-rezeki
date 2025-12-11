@@ -29,20 +29,23 @@ func Bootstrap(config *BootstrapConfig) {
 	utils.InitValidator()
 	tokenUtil := utils.NewTokenUtil(config.Config.GetString("secret_key"), config.Redis)
 
-	//user
+	// Repository
 	userRepository := repository.NewUserRepository(config.Log)
-	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validate, userRepository, tokenUtil)
-	userController := http.NewUserController(userUseCase, config.Log)
-
-	// route
 	routeRepository := repository.NewRouteRepository(config.Log)
-	routeUseCase := usecase.NewRouteUseCase(config.DB, config.Log, config.Validate, routeRepository, routeRepository)
-	routeController := http.NewRouteController(routeUseCase, config.Log)
-
-	// sales
 	salesRepository := repository.NewSalesRepository(config.Log)
+	employeeRepository := repository.NewEmployeeRepository(config.Log)
+
+	// UseCase
+	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validate, userRepository, tokenUtil)
+	routeUseCase := usecase.NewRouteUseCase(config.DB, config.Log, config.Validate, routeRepository, routeRepository)
 	salesUseCase := usecase.NewSalesUseCase(config.DB, config.Log, config.Validate, salesRepository, routeRepository)
+	employeeUseCase := usecase.NewEmployeeUseCase(config.DB, config.Log, config.Validate, employeeRepository, routeRepository, salesRepository)
+
+	// Controller
+	userController := http.NewUserController(userUseCase, config.Log)
+	routeController := http.NewRouteController(routeUseCase, config.Log)
 	salesController := http.NewSalesController(salesUseCase, config.Log)
+	employeeController := http.NewEmployeeController(employeeUseCase, config.Log)
 
 	// hello
 	helloController := http.NewHelloController()
@@ -50,13 +53,14 @@ func Bootstrap(config *BootstrapConfig) {
 	authMiddleware := middleware.NewAuth(tokenUtil, config.Log, config.Redis)
 
 	routeConfig := route.RouteConfig{
-		App:             config.App,
-		Config:          config.Config,
-		UserController:  userController,
-		SalesController: salesController,
-		RouteController: routeController,
-		HelloController: helloController,
-		AuthMiddleware:  authMiddleware,
+		App:                config.App,
+		Config:             config.Config,
+		UserController:     userController,
+		SalesController:    salesController,
+		RouteController:    routeController,
+		EmployeeController: employeeController,
+		HelloController:    helloController,
+		AuthMiddleware:     authMiddleware,
 	}
 
 	routeConfig.Setup()

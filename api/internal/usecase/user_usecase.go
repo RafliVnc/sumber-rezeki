@@ -290,7 +290,6 @@ func (s *UserUseCaseImpl) Login(ctx context.Context, request *model.LoginUserReq
 }
 
 func (s *UserUseCaseImpl) Verify(ctx context.Context, request *model.Auth) (*model.Auth, error) {
-
 	err := s.Validate.Struct(request)
 	if err != nil {
 		s.Log.Warnf("Invalid request body : %+v", err)

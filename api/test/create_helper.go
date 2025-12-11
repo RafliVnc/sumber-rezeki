@@ -43,16 +43,30 @@ func CreateSales(total int) []entity.Sales {
 	sales := make([]entity.Sales, total)
 
 	for i := 0; i < total; i++ {
-		sales[i] = entity.Sales{
-			Name:  "Created Sales",
-			Phone: "123456" + strconv.Itoa(i),
+		// Create Employee
+		employee := entity.Employee{
+			Name:   "Sales " + strconv.Itoa(i+1),
+			Salary: 400000,
+			Role:   "SALES",
 		}
 
-		dbErr := db.Create(&sales[i]).Error
+		dbErr := db.Create(&employee).Error
 		if dbErr != nil {
-			log.Fatalf("Failed create sales data : %+v", dbErr)
+			log.Fatalf("Failed to create employee data: %+v", dbErr)
+		}
+
+		// Create Sales
+		sales[i] = entity.Sales{
+			EmployeeID: employee.ID,
+			Phone:      "123456" + strconv.Itoa(i),
+		}
+
+		dbErr = db.Create(&sales[i]).Error
+		if dbErr != nil {
+			log.Fatalf("Failed to create sales data: %+v", dbErr)
 		}
 	}
+
 	return sales
 }
 
@@ -77,27 +91,41 @@ func CreateSalesWithRoutes(count int, routeIDs []int) []entity.Sales {
 	salesList := make([]entity.Sales, count)
 
 	for i := 0; i < count; i++ {
-		sales := entity.Sales{
-			Name:  fmt.Sprintf("Created Sales %d", i),
-			Phone: fmt.Sprintf("123456%d", i),
+		// Create Employee
+		employee := entity.Employee{
+			Name:   fmt.Sprintf("Sales %d", i+1),
+			Salary: 400000,
+			Role:   "SALES",
 		}
 
-		dbErr := db.Create(&sales).Error
+		dbErr := db.Create(&employee).Error
 		if dbErr != nil {
-			log.Fatalf("Failed create sales data : %+v", dbErr)
+			log.Fatalf("Failed to create employee data: %+v", dbErr)
 		}
 
-		// add routes if exist
+		// Create Sales
+		sales := entity.Sales{
+			EmployeeID: employee.ID,
+			Phone:      fmt.Sprintf("123456%d", i),
+		}
+
+		dbErr = db.Create(&sales).Error
+		if dbErr != nil {
+			log.Fatalf("Failed to create sales data: %+v", dbErr)
+		}
+
+		// Add routes
 		if len(routeIDs) > 0 {
 			var routes []entity.Route
 			err := db.Where("id IN ?", routeIDs).Find(&routes).Error
 			if err != nil {
-				log.Fatalf("Failed find routes data : %+v", err)
+				log.Fatalf("Failed to find routes data: %+v", err)
 			}
 
+			// Add routes to sales
 			err = db.Model(&sales).Association("Routes").Replace(routes)
 			if err != nil {
-				log.Fatalf("Failed create sales routes association : %+v", err)
+				log.Fatalf("Failed to create sales routes association: %+v", err)
 			}
 		}
 

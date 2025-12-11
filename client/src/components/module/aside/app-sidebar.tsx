@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { User } from "lucide-react";
+import { CircleUser, User } from "lucide-react";
 
 import {
   Sidebar,
@@ -18,8 +18,15 @@ import { NavUser } from "./nav-user";
 const data = {
   navMain: [
     {
+      title: "Karyawan",
+      url: "/employee/attendance",
+      activePath: "/employee",
+      icon: CircleUser,
+    },
+    {
       title: "Sales",
       url: "/sales",
+      activePath: "/sales",
       icon: User,
     },
   ],

@@ -13,7 +13,9 @@ type SalesRepository interface {
 	Create(db *gorm.DB, sales *entity.Sales) error
 	Update(db *gorm.DB, sales *entity.Sales) error
 	Delete(db *gorm.DB, id int) error
+	DeleteByEmployeeId(db *gorm.DB, id int) error
 	FindById(db *gorm.DB, id int) (*entity.Sales, error)
+	FindByEmployeeId(db *gorm.DB, employeeId int) (*entity.Sales, error)
 	FindAll(db *gorm.DB, request *model.FindAllSalesRequest) ([]entity.Sales, int64, error)
 	CountByPhone(db *gorm.DB, phone string) (int64, error)
 	ReplaceRoutes(db *gorm.DB, sales *entity.Sales, routeIDs []entity.Route) error
@@ -41,10 +43,43 @@ func (r *salesRepositoryImpl) Delete(db *gorm.DB, id int) error {
 	return db.Delete(&entity.Sales{}, id).Error
 }
 
+func (r *salesRepositoryImpl) DeleteByEmployeeId(db *gorm.DB, id int) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		var sales entity.Sales
+
+		// Cari sales berdasarkan employee_id
+		if err := tx.Where("employee_id = ?", id).First(&sales).Error; err != nil {
+			return err
+		}
+
+		// Hapus semua relasi di sales_routes (hard delete)
+		if err := tx.Model(&sales).Association("Routes").Clear(); err != nil {
+			return err
+		}
+
+		// Soft delete sales
+		return tx.Unscoped().Where("employee_id = ?", id).Delete(&entity.Sales{}).Error
+	})
+}
+
 func (r *salesRepositoryImpl) FindById(db *gorm.DB, id int) (*entity.Sales, error) {
 	var sales entity.Sales
 
 	err := db.First(&sales, id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &sales, nil
+}
+
+func (r *salesRepositoryImpl) FindByEmployeeId(db *gorm.DB, employeeId int) (*entity.Sales, error) {
+	var sales entity.Sales
+
+	err := db.Where("employee_id = ?", employeeId).First(&sales).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
@@ -68,9 +103,11 @@ func (r *salesRepositoryImpl) FindAll(db *gorm.DB, request *model.FindAllSalesRe
 
 	// Main query with filters, preload, and pagination
 	query := db.Model(&entity.Sales{}).
+		Joins("JOIN employees ON employees.id = sales.employee_id").
 		Scopes(r.FilterSales(request)).
+		Preload("Employee").
 		Preload("Routes").
-		Order("name DESC")
+		Order("employees.name DESC")
 
 	// Pagination
 	if request.Page > 0 && request.PerPage > 0 {

@@ -24,6 +24,10 @@ const breadcrumbTranslations: Record<string, string> = {
   user: "Pengguna",
   route: "Rute",
   settings: "Pengaturan",
+  attendance: "Absensi",
+  payroll: "Gaji",
+  list: "Daftar",
+  employee: "Karyawan",
 };
 
 export const translateBreadcrumb = (segment: string): string => {

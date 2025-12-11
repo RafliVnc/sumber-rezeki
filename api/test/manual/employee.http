@@ -1,0 +1,27 @@
+POST http://localhost:8080/api/employees
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3Njc2OTEyNDQ1MDgsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.gLaXRjgbsmfyN2z2OdE0Cre-7zMGVdjdoR0eIL-AtgE
+
+{
+  "name": "Test Manual Sales",
+  "role":"SALES",
+  "salary":20000,
+  "phone":"0812131231",
+  "routeIds":[1]
+}
+
+### UPDATE EMPLOYEE
+PUT http://localhost:8080/api/employees/24
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3Njc2OTEyNDQ1MDgsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.gLaXRjgbsmfyN2z2OdE0Cre-7zMGVdjdoR0eIL-AtgE
+
+{
+  "name": "Test Manual Employee",
+  "role":"STAFF",
+  "salary":20000
+}
+
+### GET EMPLOYEE ID
+GET http://localhost:8080/api/employees?roles%5B%5D=SALES
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3Njc2OTEyNDQ1MDgsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.gLaXRjgbsmfyN2z2OdE0Cre-7zMGVdjdoR0eIL-AtgE

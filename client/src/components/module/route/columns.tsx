@@ -14,7 +14,7 @@ export const columns = ({
 }): ColumnDef<Route>[] => [
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Nama",
   },
   {
     accessorKey: "description",

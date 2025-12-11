@@ -11,9 +11,11 @@ import (
 )
 
 func ClearAll() {
-	ClearUsers()
+	ClearSalesRoutes()
 	ClearSales()
+	ClearEmployees()
 	ClearRoutes()
+	ClearUsers()
 }
 
 func ClearUsers() {
@@ -23,17 +25,32 @@ func ClearUsers() {
 	}
 }
 
+func ClearEmployees() {
+	err := db.Unscoped().Where("id IS NOT NULL").Delete(&entity.Employee{}).Error
+	if err != nil {
+		log.Fatalf("Failed clear employees data : %+v", err)
+	}
+}
+
 func ClearSales() {
 	err := db.Unscoped().Where("id IS NOT NULL").Delete(&entity.Sales{}).Error
 	if err != nil {
-		log.Fatalf("Failed clear user data : %+v", err)
+		log.Fatalf("Failed clear sales data : %+v", err)
+	}
+}
+
+func ClearSalesRoutes() {
+	// Hapus junction table sales_routes
+	err := db.Exec("DELETE FROM sales_routes WHERE id IS NOT NULL").Error
+	if err != nil {
+		log.Fatalf("Failed clear sales_routes data : %+v", err)
 	}
 }
 
 func ClearRoutes() {
 	err := db.Unscoped().Where("id IS NOT NULL").Delete(&entity.Route{}).Error
 	if err != nil {
-		log.Fatalf("Failed clear user data : %+v", err)
+		log.Fatalf("Failed clear routes data : %+v", err)
 	}
 }
 

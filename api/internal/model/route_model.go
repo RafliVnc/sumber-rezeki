@@ -26,3 +26,10 @@ type FindAllRouteRequest struct {
 	Page    int    `json:"page"`
 	PerPage int    `json:"perPage" validate:"max=100"`
 }
+
+type RouteResponseWithSalesCount struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	SalesCount  int    `json:"salesCount"`
+}

@@ -19,5 +19,5 @@ type Route struct {
 }
 
 func (r *Route) TableName() string {
-	return "route"
+	return "routes"
 }

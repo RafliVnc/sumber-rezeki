@@ -9,13 +9,14 @@ import (
 )
 
 type RouteConfig struct {
-	App             *fiber.App
-	UserController  *http.UserController
-	SalesController *http.SalesController
-	HelloController *http.HelloController
-	RouteController *http.RouteController
-	AuthMiddleware  fiber.Handler
-	Config          *viper.Viper
+	App                *fiber.App
+	UserController     *http.UserController
+	SalesController    *http.SalesController
+	HelloController    *http.HelloController
+	RouteController    *http.RouteController
+	EmployeeController *http.EmployeeController
+	AuthMiddleware     fiber.Handler
+	Config             *viper.Viper
 }
 
 func (c *RouteConfig) Setup() {
@@ -55,4 +56,11 @@ func (c *RouteConfig) SetupAuthRoute() {
 	c.App.Post("/api/routes", c.RouteController.Create)
 	c.App.Put("/api/routes/:id", c.RouteController.Update)
 	c.App.Delete("/api/routes/:id", c.RouteController.Delete)
+
+	// employee
+	c.App.Get("/api/employees", c.EmployeeController.FindAll)
+	c.App.Get("/api/employees/:id", c.EmployeeController.FindById)
+	c.App.Post("/api/employees", c.EmployeeController.Create)
+	c.App.Put("/api/employees/:id", c.EmployeeController.Update)
+	c.App.Delete("/api/employees/:id", c.EmployeeController.Delete)
 }

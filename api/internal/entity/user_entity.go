@@ -10,14 +10,17 @@ import (
 
 type User struct {
 	ID        uuid.UUID      `gorm:"type:uuid;primaryKey"`
-	Name      string         `gorm:"column:name"`
-	Username  string         `gorm:"column:username"`
-	Phone     string         `gorm:"column:phone"`
-	Role      enum.UserRole  `gorm:"type:user_role;column:role;not null"`
-	Password  string         `gorm:"column:password"`
+	Name      string         `gorm:"column:name;not null"`
+	Username  string         `gorm:"column:username;not null"`
+	Phone     string         `gorm:"column:phone;not null"`
+	Role      enum.UserRole  `gorm:"type:UserRole;column:role;not null"`
+	Password  string         `gorm:"column:password;not null"`
 	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime:milli"`
 	UpdatedAt time.Time      `gorm:"column:updated_at;autoCreateTime:milli;autoUpdateTime:milli"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index"`
+
+	Periods        []Period        `gorm:"foreignKey:ClosedBy;references:ID"`
+	PeriodClosures []PeriodClosure `gorm:"foreignKey:ClosedBy;references:ID"`
 }
 
 func (u *User) TableName() string {

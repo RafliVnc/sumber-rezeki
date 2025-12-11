@@ -14,6 +14,9 @@ type SalesRoutes struct {
 	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime:milli"`
 	UpdatedAt time.Time      `gorm:"column:updated_at;autoCreateTime:milli;autoUpdateTime:milli"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index"`
+
+	Sales Sales `gorm:"foreignKey:SalesId;references:ID"`
+	Route Route `gorm:"foreignKey:RouteId;references:ID"`
 }
 
 func (sr *SalesRoutes) TableName() string {

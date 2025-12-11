@@ -84,7 +84,7 @@ func (r *userRepositoryImpl) FilterUser(request *model.FindAllUserRequest) func(
 	return func(tx *gorm.DB) *gorm.DB {
 		if search := request.Search; search != "" {
 			search = "%" + search + "%"
-			tx = tx.Where("name LIKE ? OR username LIKE ? OR phone LIKE ?", search, search, search)
+			tx = tx.Where("name ILIKE ? OR username ILIKE ? OR phone ILIKE ?", search, search, search)
 		}
 
 		if len(request.Roles) > 0 {

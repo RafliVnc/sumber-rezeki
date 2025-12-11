@@ -29,6 +29,7 @@ import { InputPassword } from "@/components/ui/form/password-form";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { UserRole } from "@/type/enum/user-role";
+import Required from "@/components/ui/required";
 
 const apiFormUser = async ({
   values,
@@ -105,7 +106,9 @@ export default function FormUser({
             name="role"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Role *</FormLabel>
+                <FormLabel>
+                  <Required>Role</Required>
+                </FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl className="w-full">
                     <SelectTrigger>
@@ -131,7 +134,9 @@ export default function FormUser({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nama</FormLabel>
+                <FormLabel>
+                  <Required>Nama</Required>
+                </FormLabel>
                 <FormControl>
                   <Input type="text" placeholder="Nama" {...field} />
                 </FormControl>
@@ -144,7 +149,9 @@ export default function FormUser({
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username</FormLabel>
+                <FormLabel>
+                  <Required>Username</Required>
+                </FormLabel>
                 <FormControl>
                   <Input type="text" placeholder="Username" {...field} />
                 </FormControl>
@@ -157,7 +164,9 @@ export default function FormUser({
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>No. HP</FormLabel>
+                <FormLabel>
+                  <Required>No. Hp</Required>
+                </FormLabel>
                 <FormControl>
                   <Input
                     type="text"
@@ -182,7 +191,9 @@ export default function FormUser({
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Kata Sandi</FormLabel>
+                  <FormLabel>
+                    <Required>Kata Sandi</Required>
+                  </FormLabel>
                   <FormControl>
                     <InputPassword
                       placeholder="Kata Sandi"

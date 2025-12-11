@@ -2,17 +2,17 @@ openapi: 3.0.3
 info:
   title: Go First App API
   description: API documentation for Go First App
-  version: 1.1.0
+  version: 1.2.0
 
 servers:
   - url: http://localhost:8080
 
+# ==================== PATHS ====================
 paths:
   /api/login:
     post:
       tags: [Auth]
       summary: Login user
-      description: Authenticate user with username and password to get access token
       requestBody:
         required: true
         content:
@@ -25,26 +25,23 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/UserResponse"
-                  token:
-                    type: string
-                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserResponse"
+                      token:
+                        type: string
         "400":
-          description: Invalid username or password
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /api/current:
     get:
       tags: [Auth]
       summary: Get current authenticated user
-      description: Return user information based on provided JWT token
       security:
         - BearerAuth: []
       responses:
@@ -53,86 +50,59 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/UserResponse"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserResponse"
         "401":
-          description: Unauthorized or invalid token
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+          $ref: "#/components/responses/Unauthorized"
 
   /api/users:
     get:
       tags: [User]
       summary: Get all users
-      description: Get all users with pagination and filtering
       security:
         - BearerAuth: []
       parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            example: 1
-        - name: perPage
-          in: query
-          schema:
-            type: integer
-            example: 10
-        - name: name
-          in: query
-          schema:
-            type: string
-            example: John
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PerPageParam"
+        - $ref: "#/components/parameters/NameFilterParam"
         - name: username
           in: query
           schema:
             type: string
-            example: johndoe
         - name: phone
           in: query
           schema:
             type: string
-            example: "08123456789"
         - name: role
           in: query
           schema:
-            type: string
-            enum: [SUPER_ADMIN, OWNER, WAREHOUSE_HEAD, TREASURER]
+            $ref: "#/components/schemas/UserRole"
       responses:
         "200":
-          description: Success fetching users
+          description: Success
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/UserResponse"
-                  paging:
-                    $ref: "#/components/schemas/Paging"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/UserResponse"
+                      paging:
+                        $ref: "#/components/schemas/Paging"
         "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+          $ref: "#/components/responses/Unauthorized"
 
     post:
       tags: [User]
       summary: Create a new user
-      description: Create a new user account
       security:
         - BearerAuth: []
       requestBody:
@@ -140,211 +110,440 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserRequest"
+              $ref: "#/components/schemas/CreateUserRequest"
       responses:
         "201":
-          description: User successfully created
+          description: User created
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/UserResponse"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserResponse"
         "400":
-          description: Invalid request body
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+          $ref: "#/components/responses/BadRequest"
         "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+          $ref: "#/components/responses/Unauthorized"
 
   /api/users/{userId}:
     put:
       tags: [User]
-      summary: Update existing user
+      summary: Update user
       security:
         - BearerAuth: []
       parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: "#/components/parameters/UserIdParam"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserRequest"
+              $ref: "#/components/schemas/UpdateUserRequest"
       responses:
         "200":
-          description: User successfully updated
+          description: User updated
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  data:
-                    $ref: "#/components/schemas/UserResponse"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/UserResponse"
         "400":
-          description: Invalid input
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+          $ref: "#/components/responses/NotFound"
 
     delete:
       tags: [User]
       summary: Delete user
-      description: Permanently delete user by ID
       security:
         - BearerAuth: []
       parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: "#/components/parameters/UserIdParam"
       responses:
         "200":
-          description: User successfully deleted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
+          $ref: "#/components/responses/DeleteSuccess"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "404":
-          description: User not found
+          $ref: "#/components/responses/NotFound"
+
+  /api/employees:
+    get:
+      tags: [Employee]
+      summary: Get all employees
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PerPageParam"
+        - $ref: "#/components/parameters/NameFilterParam"
+        - name: role
+          in: query
+          schema:
+            $ref: "#/components/schemas/EmployeeRole"
+      responses:
+        "200":
+          description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/EmployeeResponse"
+                      paging:
+                        $ref: "#/components/schemas/Paging"
 
+    post:
+      tags: [Employee]
+      summary: Create employee
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEmployeeRequest"
+      responses:
+        "201":
+          description: Employee created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/EmployeeResponse"
+
+  /api/employees/{employeeId}:
+    get:
+      tags: [Employee]
+      summary: Get employee by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/EmployeeIdParam"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/EmployeeResponse"
+
+    put:
+      tags: [Employee]
+      summary: Update employee
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/EmployeeIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEmployeeRequest"
+      responses:
+        "200":
+          description: Employee updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/EmployeeResponse"
+
+    delete:
+      tags: [Employee]
+      summary: Delete employee
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/EmployeeIdParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/DeleteSuccess"
+
+# ==================== COMPONENTS ====================
 components:
   securitySchemes:
     BearerAuth:
       type: apiKey
       in: header
       name: Authorization
+      description: "Format: Bearer {token}"
 
+  # ==================== PARAMETERS (Reusable) ====================
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    PerPageParam:
+      name: perPage
+      in: query
+      description: Items per page
+      schema:
+        type: integer
+        default: 10
+        minimum: 1
+        maximum: 100
+
+    NameFilterParam:
+      name: name
+      in: query
+      description: Filter by name (partial match)
+      schema:
+        type: string
+
+    UserIdParam:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    EmployeeIdParam:
+      name: employeeId
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  # ==================== RESPONSES (Reusable) ====================
+  responses:
+    BadRequest:
+      description: Bad request / Validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    DeleteSuccess:
+      description: Successfully deleted
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: true
+
+  # ==================== SCHEMAS ====================
   schemas:
-    LoginRequest:
-      type: object
-      required:
-        - username
-        - password
-      properties:
-        username:
-          type: string
-          example: superadmin
-        password:
-          type: string
-          format: password
-          example: "123456"
-
-    UserRequest:
-      type: object
-      required:
-        - name
-        - username
-        - password
-        - role
-      properties:
-        name:
-          type: string
-          example: John Doe
-        username:
-          type: string
-          example: johndoe
-        password:
-          type: string
-          format: password
-          example: "123456"
-        phone:
-          type: string
-          example: "08123456789"
-        role:
-          type: string
-          enum: [SUPER_ADMIN, OWNER, WAREHOUSE_HEAD, TREASURER]
-          example: SUPER_ADMIN
-
-    UserResponse:
+    # Base Schemas
+    SuccessResponse:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-          example: 3fac46fc-15ae-49af-b4b4-4cad48bca1af
-        name:
-          type: string
-          example: John Doe
-        username:
-          type: string
-          example: johndoe
-        phone:
-          type: string
-          example: "08123456789"
-        role:
-          type: string
-          enum: [SUPER_ADMIN, OWNER, WAREHOUSE_HEAD, TREASURER]
-          example: SUPER_ADMIN
-        createdAt:
-          type: string
-          format: date-time
+        success:
+          type: boolean
+          example: true
 
     Paging:
       type: object
       properties:
         page:
           type: integer
-          example: 1
         perPage:
           type: integer
-          example: 10
         totalItems:
           type: integer
-          example: 45
         totalPages:
           type: integer
-          example: 5
-
-    ErrorDetails:
-      type: object
-      properties:
-        field:
-          type: string
-          example: username
-        message:
-          type: string
-          example: is required
 
     ErrorResponse:
       type: object
       properties:
         code:
           type: integer
-          example: 400
         message:
           type: string
-          example: validation error
         details:
           type: array
           items:
-            $ref: "#/components/schemas/ErrorDetails"
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    # Common Properties
+    PhoneNumber:
+      type: string
+      pattern: "^08[0-9]{9,11}$"
+      example: "08123456789"
+
+    UserRole:
+      type: string
+      enum: [SUPER_ADMIN, OWNER, WAREHOUSE_HEAD, TREASURER]
+
+    EmployeeRole:
+      type: string
+      enum: [WAREHOUSE_HEAD, TREASURER, SALES, DRIVER, HELPER, STAFF]
+
+    # Auth
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          example: superadmin
+        password:
+          type: string
+          minLength: 6
+          example: "123456"
+
+    # User Schemas
+    BaseUserFields:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+        username:
+          type: string
+          minLength: 3
+        phone:
+          $ref: "#/components/schemas/PhoneNumber"
+        role:
+          $ref: "#/components/schemas/UserRole"
+
+    CreateUserRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseUserFields"
+        - type: object
+          required: [name, username, password, role]
+          properties:
+            password:
+              type: string
+              minLength: 6
+
+    UpdateUserRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseUserFields"
+        - type: object
+          required: [name, username, role]
+          properties:
+            password:
+              type: string
+              minLength: 6
+              description: Optional - only if changing password
+
+    UserResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseUserFields"
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            createdAt:
+              type: string
+              format: date-time
+
+    # Employee Schemas
+    BaseEmployeeFields:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+        salary:
+          type: number
+          minimum: 0
+        role:
+          $ref: "#/components/schemas/EmployeeRole"
+
+    CreateEmployeeRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseEmployeeFields"
+        - type: object
+          required: [name, role]
+          properties:
+            phone:
+              $ref: "#/components/schemas/PhoneNumber"
+            routes:
+              type: array
+              items:
+                type: integer
+              minItems: 1
+
+    UpdateEmployeeRequest:
+      allOf:
+        - $ref: "#/components/schemas/BaseEmployeeFields"
+        - type: object
+          required: [name, salary, role]
+          properties:
+            phone:
+              $ref: "#/components/schemas/PhoneNumber"
+            routes:
+              type: array
+              items:
+                type: integer
+              minItems: 1
+
+    EmployeeResponse:
+      allOf:
+        - $ref: "#/components/schemas/BaseEmployeeFields"
+        - type: object
+          properties:
+            id:
+              type: integer
+            phone:
+              type: string
+            routes:
+              type: array
+              items:
+                type: integer
+            createdAt:
+              type: string
+              format: date-time

@@ -24,11 +24,10 @@ type RegisterUserRequest struct {
 
 type UpdateUserRequest struct {
 	ID       uuid.UUID     `json:"id" validate:"required,uuid"`
-	Name     string        `json:"name" validate:"omitempty,required,max=100"`
-	Username string        `json:"username" validate:"omitempty,required"`
-	Password string        `json:"password" validate:"omitempty,min=6"`
-	Phone    string        `json:"phone" validate:"omitempty,required,numeric,max=15"`
-	Role     enum.UserRole `json:"role" validate:"omitempty,required,userrole"`
+	Name     string        `json:"name" validate:"required,max=100"`
+	Username string        `json:"username" validate:"required"`
+	Phone    string        `json:"phone" validate:"required,numeric,max=15"`
+	Role     enum.UserRole `json:"role" validate:"required,userrole"`
 }
 
 type DeleteUserRequest struct {
