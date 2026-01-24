@@ -7,13 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type EmployeeAttendances struct {
+type EmployeeAttendance struct {
 	ID     int                   `gorm:"primaryKey"`
 	Date   time.Time             `gorm:"type:date;not null"`
 	Status enum.AttendanceStatus `gorm:"type:absen_status;column:status;not null"`
 
-	EmployeeID int       `gorm:"column:employee_id;not null"`
-	Employee   *Employee `gorm:"foreignKey:EmployeeID;references:ID"`
+	EmployeeId int       `gorm:"column:employee_id;not null"`
+	Employee   *Employee `gorm:"foreignKey:EmployeeId;references:ID"`
 
 	PeriodId int     `gorm:"column:period_id;not null"`
 	Period   *Period `gorm:"foreignKey:PeriodId;references:ID"`
@@ -23,6 +23,6 @@ type EmployeeAttendances struct {
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index"`
 }
 
-func (ea *EmployeeAttendances) TableName() string {
+func (ea *EmployeeAttendance) TableName() string {
 	return "employee_attendances"
 }

@@ -16,6 +16,7 @@ type EmployeeRepository interface {
 	Delete(db *gorm.DB, id int) error
 	FindById(db *gorm.DB, id int) (*entity.Employee, error)
 	FindByIdWithSubordinates(db *gorm.DB, id int) (*entity.Employee, error)
+	FindAllWithAttendances(db *gorm.DB, request *model.FindAllEmployeeWithAttendanceRequest) ([]entity.Employee, error)
 }
 
 type employeeRepositoryImpl struct {
@@ -118,4 +119,23 @@ func (r *employeeRepositoryImpl) FindByIdWithSubordinates(db *gorm.DB, id int) (
 	}
 
 	return &employee, nil
+}
+
+func (r *employeeRepositoryImpl) FindAllWithAttendances(db *gorm.DB, request *model.FindAllEmployeeWithAttendanceRequest) ([]entity.Employee, error) {
+	var employees []entity.Employee
+
+	query := db.Preload("EmployeeAttendance", func(db *gorm.DB) *gorm.DB {
+		if request.StartDate != "" && request.EndDate != "" {
+			return db.Where("date BETWEEN ? AND ?", request.StartDate, request.EndDate)
+		}
+		return db
+	})
+
+	if err := query.Where("join_date <= ?", request.EndDate).
+		Find(&employees).Error; err != nil {
+		r.Log.WithError(err).Error("failed to find employees")
+		return nil, err
+	}
+
+	return employees, nil
 }

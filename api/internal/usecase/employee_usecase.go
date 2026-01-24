@@ -24,6 +24,7 @@ type EmployeeUseCase interface {
 	Delete(ctx context.Context, request *model.DeleteEmployeeRequest) error
 	FindById(ctx context.Context, request *model.FindByIdEmployeeRequest) (*model.EmployeeResponse, error)
 	validateAndGetRoutes(tx *gorm.DB, routeIDs []int) ([]entity.Route, error)
+	FindAllWithAttendances(ctx context.Context, request *model.FindAllEmployeeWithAttendanceRequest) ([]model.EmployeeResponse, error)
 	// TODO FindEmployeeAttendace
 }
 
@@ -142,9 +143,9 @@ func (u *EmployeeUseCaseImpl) Create(ctx context.Context, request *model.CreateE
 			}
 		}
 
-		// Create Sales with EmployeeID reference
+		// Create Sales with EmployeeId reference
 		sales := &entity.Sales{
-			EmployeeID: newEmployee.ID,
+			EmployeeId: newEmployee.ID,
 			Phone:      request.Phone,
 			Routes:     routes,
 		}
@@ -243,7 +244,7 @@ func (u *EmployeeUseCaseImpl) Update(ctx context.Context, request *model.UpdateE
 		}
 
 		sales := &entity.Sales{
-			EmployeeID: employee.ID,
+			EmployeeId: employee.ID,
 			Phone:      request.Phone,
 			Routes:     routes,
 		}
@@ -431,4 +432,34 @@ func (u *EmployeeUseCaseImpl) FindById(ctx context.Context, request *model.FindB
 	}
 
 	return response, nil
+}
+
+func (u *EmployeeUseCaseImpl) FindAllWithAttendances(ctx context.Context, request *model.FindAllEmployeeWithAttendanceRequest) ([]model.EmployeeResponse, error) {
+
+	//check request validation
+	details, errorMessage, err := utils.ValidateStruct(request)
+	if err != nil {
+		u.Log.Warnf("Failed to validate request: %+v", details)
+		return nil, model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
+	}
+
+	employees, err := u.EmployeeRepository.FindAllWithAttendances(u.DB.WithContext(ctx), request)
+	if err != nil {
+		u.Log.WithError(err).Error("error getting employees")
+		return nil, fiber.ErrInternalServerError
+	}
+
+	responses := make([]model.EmployeeResponse, len(employees))
+	for i, employee := range employees {
+		responses[i] = *converter.ToEmployeeResponse(&employee)
+
+		// Convert attendances
+		attendances := make([]model.EmployeeAttendanceResponse, len(employee.EmployeeAttendance))
+		for j, attendance := range employee.EmployeeAttendance {
+			attendances[j] = *converter.ToEmployeeAttendanceResponse(&attendance)
+		}
+		responses[i].Attendaces = attendances
+	}
+
+	return responses, nil
 }

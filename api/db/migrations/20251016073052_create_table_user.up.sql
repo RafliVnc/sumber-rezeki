@@ -2,7 +2,7 @@
 CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'OWNER', 'WAREHOUSE_HEAD', 'TREASURER');
 CREATE TYPE "PeriodType" AS ENUM ('WEEKLY', 'MONTHLY');
 CREATE TYPE "EmployeeRole" AS ENUM ('WAREHOUSE_HEAD', 'SALES', 'DRIVER', 'HELPER', 'TREASURER', 'STAFF');
-CREATE TYPE "AttendanceStatus" AS ENUM ('PRESENT', 'ABSENT');
+CREATE TYPE "AttendanceStatus" AS ENUM ('PRESENT', 'LEAVE','SICK', 'ABSENT');
 CREATE TYPE "PayrollModule" AS ENUM ('SALES_INCENTIVE', 'OPERATIONAL');
 
 -- CreateTable: users
@@ -141,3 +141,4 @@ CREATE INDEX "sales_routes_route_id_idx" ON "sales_routes"("route_id");
 -- Seed Admin
 INSERT INTO users (id, name, username, phone, role, password) 
 VALUES ('7f5dc73e-e097-4e8e-ba7c-5ed828fabc74', 'Super Admin', 'superadmin', '0888888888', 'SUPER_ADMIN', '$2a$10$ibmW.pidc9yRifFckQJFZ.1Hs4BEkf8.B.b5.xSJio3nsR.3y7rQO');
+

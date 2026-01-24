@@ -22,9 +22,9 @@ type Employee struct {
 	UpdatedAt time.Time      `gorm:"column:updated_at;autoCreateTime:milli;autoUpdateTime:milli"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index"`
 
-	EmployeeAttendances []EmployeeAttendances `gorm:"foreignKey:EmployeeID;references:ID"`
-	Sales               *Sales                `gorm:"foreignKey:EmployeeID;references:ID"`
-	Payrolls            []Payroll             `gorm:"foreignKey:EmployeeID;references:ID"`
+	EmployeeAttendance []EmployeeAttendance `gorm:"foreignKey:EmployeeId;references:ID"`
+	Sales              *Sales               `gorm:"foreignKey:EmployeeId;references:ID"`
+	Payrolls           []Payroll            `gorm:"foreignKey:EmployeeId;references:ID"`
 }
 
 func (e *Employee) TableName() string {

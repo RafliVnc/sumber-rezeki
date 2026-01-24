@@ -1,6 +1,6 @@
 POST http://localhost:8080/api/employees
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3Njc2OTEyNDQ1MDgsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.gLaXRjgbsmfyN2z2OdE0Cre-7zMGVdjdoR0eIL-AtgE
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NzE0OTg0ODQyNDcsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.vjO5-AaKn5NPze9Nc64IEXD9bnwGGBCZ2kZs8k_TIBE
 
 {
   "name": "Test Manual Sales",
@@ -22,6 +22,6 @@ Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3Njc2OTEyNDQ1
 }
 
 ### GET EMPLOYEE ID
-GET http://localhost:8080/api/employees?roles%5B%5D=SALES
+GET http://localhost:8080/api/attendance?startDate=2026-01-17&endDate=2026-01-23
 Content-Type: application/json
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3Njc2OTEyNDQ1MDgsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.gLaXRjgbsmfyN2z2OdE0Cre-7zMGVdjdoR0eIL-AtgE
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHBpcmUiOjE3NzE0OTg0ODQyNDcsImlkIjoiN2Y1ZGM3M2UtZTA5Ny00ZThlLWJhN2MtNWVkODI4ZmFiYzc0In0.vjO5-AaKn5NPze9Nc64IEXD9bnwGGBCZ2kZs8k_TIBE

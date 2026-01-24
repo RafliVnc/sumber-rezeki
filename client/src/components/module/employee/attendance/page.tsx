@@ -1,45 +1,97 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AttendanceTable } from "./table";
 import { Card, CardContent } from "@/components/ui/card";
+import { api } from "@/lib/api";
+import { formatDate, getSundayOfWeek } from "@/lib/utils";
+import { AttendanceStatus } from "@/type/enum/attendance-status";
+
+interface EmployeeAttendance {
+  id: number;
+  name: string;
+  Attendaces?: Array<{
+    date: string;
+    status: AttendanceStatus;
+  }>;
+}
+
+// Format data untuk UI (per employee)
+export interface AttendanceUIData {
+  employeeId: number;
+  employeeName: string;
+  attendance: {
+    [date: string]: AttendanceStatus | null;
+  };
+}
 
 export default function AttendancePage() {
-  const employees = [
-    { id: "1", name: "Stapan" },
-    { id: "2", name: "Stapan" },
-    { id: "3", name: "Stapan" },
-    { id: "4", name: "Stapan" },
-    { id: "5", name: "Stapan" },
-    { id: "6", name: "Stapan" },
-    { id: "7", name: "Stapan" },
-    { id: "8", name: "Stapan" },
-    { id: "9", name: "Stapan" },
-    { id: "10", name: "Stapan" },
-    { id: "11", name: "Stapan" },
-    { id: "12", name: "Stapan" },
-    { id: "13", name: "Stapan" },
-  ];
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(new Date());
 
-  const handleAttendanceChange = (
-    employeeId: string,
-    date: string,
-    status: "hadir" | "tidak_hadir" | null
-  ) => {
-    console.log(`Employee ${employeeId} on ${date}: ${status}`);
+  const weekStart = getSundayOfWeek(currentWeekStart);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+
+  const startDateStr = formatDate(weekStart);
+  const endDateStr = formatDate(weekEnd);
+
+  const { data: attendanceData, isLoading } = useQuery({
+    queryKey: ["attendance", startDateStr, endDateStr],
+    queryFn: async () => {
+      const result = await api<{ data: EmployeeAttendance[] }>({
+        url: "attendance",
+        method: "GET",
+        params: {
+          startDate: startDateStr,
+          endDate: endDateStr,
+        },
+      });
+      return result.data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Transform data untuk UI (struktur per-employee untuk easy editing)
+  const uiData: AttendanceUIData[] =
+    attendanceData?.map((emp) => {
+      const attendance: { [date: string]: AttendanceStatus | null } = {};
+
+      if (emp.Attendaces && emp.Attendaces.length > 0) {
+        emp.Attendaces.forEach((att) => {
+          const dateStr = att.date.split("T")[0];
+          attendance[dateStr] = att.status;
+        });
+      }
+
+      return {
+        employeeId: emp.id,
+        employeeName: emp.name,
+        attendance,
+      };
+    }) || [];
+
+  const employees =
+    attendanceData?.map((emp) => ({
+      id: emp.id,
+      name: emp.name,
+    })) || [];
+
+  const handleWeekChange = (newDate: Date) => {
+    setCurrentWeekStart(newDate);
   };
 
-  const handleConfirm = (records: any) => {
-    console.log("Attendance confirmed:", records);
-    // Here you can save to database or API
-  };
   return (
     <Card>
       <CardContent>
         <AttendanceTable
-          currentDate={new Date()}
+          currentDate={currentWeekStart}
           employees={employees}
-          onAttendanceChange={handleAttendanceChange}
-          onConfirm={handleConfirm}
+          initialRecords={uiData}
+          totalEmployees={attendanceData?.length || 0}
+          onWeekChange={handleWeekChange}
+          isLoading={isLoading}
+          weekStartStr={startDateStr}
+          weekEndStr={endDateStr}
         />
       </CardContent>
     </Card>

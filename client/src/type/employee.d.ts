@@ -11,7 +11,8 @@ type Employee = {
   id: number;
   name: string;
   salary: float;
-  supervisorId: number;
+  supervisorId?: number;
   role: EmployeeRole;
   Sales?: Sales;
+  Attendaces?: Attendance[];
 };

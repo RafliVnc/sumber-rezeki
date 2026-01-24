@@ -3,12 +3,13 @@ package model
 import "api/internal/entity/enum"
 
 type EmployeeResponse struct {
-	ID           int            `json:"id,omitempty"`
-	Name         string         `json:"name"`
-	Salary       float64        `json:"salary"`
-	SupervisorId *int           `json:"supervisorId,omitempty"`
-	Role         string         `json:"role"`
-	Sales        *SalesResponse `json:"Sales,omitempty"`
+	ID           int                          `json:"id,omitempty"`
+	Name         string                       `json:"name"`
+	Salary       float64                      `json:"salary"`
+	SupervisorId *int                         `json:"supervisorId,omitempty"`
+	Role         string                       `json:"role"`
+	Sales        *SalesResponse               `json:"Sales,omitempty"`
+	Attendaces   []EmployeeAttendanceResponse `json:"Attendaces,omitempty"`
 }
 
 type FindAllEmployeeRequest struct {
@@ -47,11 +48,7 @@ type FindByIdEmployeeRequest struct {
 	ID int `json:"id" validate:"required,gt=0"`
 }
 
-type FindEmployeeAttendanceRequest struct {
-	ID        int    `json:"id" validate:"required,gt=0"`
-	Page      int    `json:"page" validate:"omitempty,max=100"`
-	PerPage   int    `json:"perPage" validate:"omitempty"`
-	StartDate string `json:"startDate" validate:"omitempty"`
-	EndDate   string `json:"endDate" validate:"omitempty"`
-	Status    string `json:"status" validate:"omitempty,AttendanceStatus"`
+type FindAllEmployeeWithAttendanceRequest struct {
+	StartDate string `json:"startDate" validate:"required"`
+	EndDate   string `json:"endDate" validate:"required"`
 }

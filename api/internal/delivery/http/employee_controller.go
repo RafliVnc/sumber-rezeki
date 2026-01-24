@@ -140,3 +140,20 @@ func (c *EmployeeController) FindById(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(model.WebResponse[*model.EmployeeResponse]{Data: response})
 }
+
+func (c *EmployeeController) FindAllWithAttendances(ctx *fiber.Ctx) error {
+	request := &model.FindAllEmployeeWithAttendanceRequest{
+		StartDate: ctx.Query("startDate"),
+		EndDate:   ctx.Query("endDate"),
+	}
+
+	response, err := c.EmployeeUseCase.FindAllWithAttendances(ctx.UserContext(), request)
+	if err != nil {
+		c.Log.WithError(err).Error("error getting employees")
+		return err
+	}
+
+	return ctx.JSON(model.WebResponse[[]model.EmployeeResponse]{
+		Data: response,
+	})
+}

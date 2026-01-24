@@ -11,7 +11,7 @@ func ToSalesResponse(sales *entity.Sales) *model.SalesResponse {
 		ID:         sales.ID,
 		Phone:      sales.Phone,
 		CreatedAt:  sales.CreatedAt,
-		EmployeeID: &sales.EmployeeID,
+		EmployeeId: &sales.EmployeeId,
 		Employee:   &model.EmployeeResponse{Name: sales.Employee.Name},
 	}
 }

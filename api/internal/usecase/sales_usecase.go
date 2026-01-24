@@ -102,7 +102,7 @@ func (s *SalesUseCaseImpl) Create(ctx context.Context, request *model.CreateSale
 
 	//set sales
 	sales := &entity.Sales{
-		EmployeeID: request.EmployeeID,
+		EmployeeId: request.EmployeeId,
 		Phone:      request.Phone,
 		Routes:     Routes,
 	}
@@ -115,7 +115,7 @@ func (s *SalesUseCaseImpl) Create(ctx context.Context, request *model.CreateSale
 	//commit
 	if err := tx.Commit().Error; err != nil {
 		s.Log.WithFields(logrus.Fields{
-			"employeeId": request.EmployeeID,
+			"employeeId": request.EmployeeId,
 		}).Warnf("Failed commit to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
@@ -235,7 +235,7 @@ func (s *SalesUseCaseImpl) Update(ctx context.Context, request *model.UpdateSale
 	//set sales
 	sales := &entity.Sales{
 		ID:         request.ID,
-		EmployeeID: request.EmployeeID,
+		EmployeeId: request.EmployeeId,
 		Phone:      request.Phone,
 	}
 
@@ -247,7 +247,7 @@ func (s *SalesUseCaseImpl) Update(ctx context.Context, request *model.UpdateSale
 	//commit
 	if err := tx.Commit().Error; err != nil {
 		s.Log.WithFields(logrus.Fields{
-			"EmployeeID": request.EmployeeID,
+			"EmployeeId": request.EmployeeId,
 		}).Warnf("Failed commit to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}

@@ -10,8 +10,8 @@ type Sales struct {
 	ID    int    `gorm:"primaryKey;autoIncrement"`
 	Phone string `gorm:"column:phone"`
 
-	EmployeeID int      `gorm:"unique"`
-	Employee   Employee `gorm:"foreignKey:EmployeeID"`
+	EmployeeId int      `gorm:"unique"`
+	Employee   Employee `gorm:"foreignKey:EmployeeId"`
 
 	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime:milli"`
 	UpdatedAt time.Time      `gorm:"column:updated_at;autoCreateTime:milli;autoUpdateTime:milli"`

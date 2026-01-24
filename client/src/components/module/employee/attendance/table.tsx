@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X, Save } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -11,74 +13,116 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface AttendanceRecord {
-  employeeId: string;
-  employeeName: string;
-  attendance: {
-    [date: string]: "hadir" | "tidak_hadir" | null;
-  };
-}
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { formatDate, getDayName, getSundayOfWeek } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AttendanceStatus } from "@/type/enum/attendance-status";
+import { AttendanceUIData } from "./page";
+import {
+  AttendanceValidation,
+  BatchAttendanceInput,
+  UIFormInput,
+} from "@/validation/attendance-validation";
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 
 interface AttendanceTableProps {
   currentDate?: Date;
   employees: Array<{
-    id: string;
+    id: number;
     name: string;
   }>;
-  onAttendanceChange?: (
-    employeeId: string,
-    date: string,
-    status: "hadir" | "tidak_hadir" | null
-  ) => void;
-  onConfirm?: (records: AttendanceRecord[]) => void;
+  initialRecords?: AttendanceUIData[];
+  totalEmployees: number;
+  onWeekChange?: (newDate: Date) => void;
+  isLoading?: boolean;
+  weekStartStr: string;
+  weekEndStr: string;
 }
+
+const getNextStatus = (
+  current: AttendanceStatus | null,
+): AttendanceStatus | null => {
+  if (current === null) {
+    return AttendanceStatus.PRESENT;
+  } else if (current === AttendanceStatus.PRESENT) {
+    return AttendanceStatus.LEAVE;
+  } else if (current === AttendanceStatus.LEAVE) {
+    return AttendanceStatus.SICK;
+  } else if (current === AttendanceStatus.SICK) {
+    return AttendanceStatus.ABSENT;
+  } else {
+    return null;
+  }
+};
+
+const ApiSaveAttendance = async (data: BatchAttendanceInput) => {
+  return await api<{ message: string }, BatchAttendanceInput>({
+    url: "api/attendance/batch",
+    method: "POST",
+    body: data,
+  });
+};
 
 export function AttendanceTable({
   currentDate = new Date(),
   employees,
-  onAttendanceChange,
-  onConfirm,
+  initialRecords = [],
+  totalEmployees,
+  onWeekChange,
+  isLoading,
+  weekStartStr,
+  weekEndStr,
 }: AttendanceTableProps) {
-  const [records, setRecords] = useState<AttendanceRecord[]>(
-    employees.map((emp) => ({
-      employeeId: emp.id,
-      employeeName: emp.name,
-      attendance: {},
-    }))
-  );
   const [isEditMode, setIsEditMode] = useState(false);
   const [displayDate, setDisplayDate] = useState(new Date(currentDate));
+  const queryClient = useQueryClient();
 
-  const getSundayOfWeek = (date: Date): Date => {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day;
-    return new Date(d.setDate(diff));
-  };
+  const form = useForm<UIFormInput>({
+    resolver: zodResolver(AttendanceValidation.UI_FORM),
+    defaultValues: {
+      dates: {},
+    },
+    mode: "onChange",
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: ApiSaveAttendance,
+    onSuccess: () => {
+      toast.success("Data absensi berhasil disimpan!");
+      queryClient.invalidateQueries({
+        queryKey: ["attendance", weekStartStr, weekEndStr],
+      });
+      setIsEditMode(false);
+    },
+    onError: (error: Error) => {
+      console.error("Error saving attendance:", error);
+      toast.error(
+        error?.message || "Gagal menyimpan data absensi. Silakan coba lagi.",
+      );
+    },
+  });
+
+  useEffect(() => {
+    setDisplayDate(new Date(currentDate));
+  }, [currentDate]);
 
   const weekStart = getSundayOfWeek(displayDate);
   const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6); // Saturday
-
-  const getIsNextWeekDisabled = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const currentWeekEnd = new Date(weekEnd);
-    currentWeekEnd.setHours(0, 0, 0, 0);
-
-    // If today is still within or before the current week, disable next
-    return today <= currentWeekEnd;
-  };
+  weekEnd.setDate(weekEnd.getDate() + 6);
 
   const generateWeekDates = () => {
     const dates = [];
     const current = new Date(weekStart);
-
     while (current <= weekEnd) {
       const day = current.getDay();
-      // Include only: Sunday (0), Monday (1), Tuesday (2), Wednesday (3), Thursday (4), Saturday (6)
       if (day !== 5) {
         dates.push(new Date(current));
       }
@@ -89,88 +133,203 @@ export function AttendanceTable({
 
   const dates = generateWeekDates();
 
-  const getDayName = (date: Date): string => {
-    const days = [
-      "Minggu",
-      "Senin",
-      "Selasa",
-      "Rabu",
-      "Kamis",
-      "Jumat",
-      "Sabtu",
-    ];
-    return days[date.getDay()];
+  useEffect(() => {
+    const initialDates: UIFormInput["dates"] = {};
+
+    dates.forEach((date) => {
+      const dateStr = formatDate(date);
+      const hasData = initialRecords.some(
+        (r) =>
+          r.attendance[dateStr] !== null && r.attendance[dateStr] !== undefined,
+      );
+
+      if (hasData) {
+        initialDates[dateStr] = {
+          isActive: true,
+          employees: employees.map((emp) => {
+            const record = initialRecords.find((r) => r.employeeId === emp.id);
+            return {
+              id: emp.id,
+              name: emp.name,
+              status: record?.attendance[dateStr] || null,
+            };
+          }),
+        };
+      }
+    });
+
+    form.reset({ dates: initialDates });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialRecords, employees, weekStart.getTime()]);
+
+  const activateDateForEditing = (dateStr: string) => {
+    const currentDates = form.getValues("dates");
+
+    if (!currentDates[dateStr] || !currentDates[dateStr].isActive) {
+      form.setValue(`dates.${dateStr}`, {
+        isActive: true,
+        employees: employees.map((emp) => ({
+          id: emp.id,
+          name: emp.name,
+          status: AttendanceStatus.PRESENT,
+        })),
+      });
+    }
   };
 
-  const getDateString = (date: Date): string => {
-    return date.toISOString().split("T")[0];
+  const deactivateDate = (dateStr: string) => {
+    const currentDates = form.getValues("dates");
+
+    const hasExistingData = initialRecords.some(
+      (r) =>
+        r.attendance[dateStr] !== null && r.attendance[dateStr] !== undefined,
+    );
+
+    if (hasExistingData) {
+      form.setValue(`dates.${dateStr}`, {
+        isActive: true,
+        employees: employees.map((emp) => ({
+          id: emp.id,
+          name: emp.name,
+          status: null,
+        })),
+      });
+    } else {
+      const newDates = { ...currentDates };
+      delete newDates[dateStr];
+      form.setValue("dates", newDates);
+    }
   };
 
-  const toggleAttendance = (employeeId: string, date: string) => {
-    setRecords((prev) =>
-      prev.map((record) => {
-        if (record.employeeId === employeeId) {
-          const currentStatus = record.attendance[date];
-          const newStatus: "hadir" | "tidak_hadir" | null =
-            currentStatus === null
-              ? "hadir"
-              : currentStatus === "hadir"
-              ? "tidak_hadir"
-              : null;
+  const toggleAttendance = (dateStr: string, employeeId: number) => {
+    const currentDates = form.getValues("dates");
+    if (!currentDates[dateStr]) return;
 
-          onAttendanceChange?.(employeeId, date, newStatus);
+    const employeeIndex = currentDates[dateStr].employees.findIndex(
+      (e) => e.id === employeeId,
+    );
 
-          return {
-            ...record,
-            attendance: {
-              ...record.attendance,
-              [date]: newStatus,
-            },
-          };
+    if (employeeIndex === -1) return;
+
+    const currentStatus = currentDates[dateStr].employees[employeeIndex].status;
+    const newStatus = getNextStatus(currentStatus);
+
+    form.setValue(
+      `dates.${dateStr}.employees.${employeeIndex}.status`,
+      newStatus,
+      {
+        shouldValidate: true,
+        shouldDirty: true,
+      },
+    );
+  };
+
+  const handleFormSubmit = (data: UIFormInput) => {
+    const attendances: BatchAttendanceInput["attendances"] = [];
+
+    Object.entries(data.dates).forEach(([date, dateData]) => {
+      if (!dateData.isActive) return;
+
+      const allNull = dateData.employees.every((e) => e.status === null);
+
+      if (allNull) {
+        attendances.push({
+          date,
+          employees: [],
+          action: "delete",
+        });
+      } else {
+        const validEmployees = dateData.employees.filter(
+          (e) => e.status !== null,
+        );
+
+        if (validEmployees.length !== totalEmployees) {
+          toast.error(`Tanggal ${date}: Semua karyawan harus memiliki status`);
+          throw new Error("Incomplete data");
         }
-        return record;
-      })
-    );
+
+        const employees = validEmployees.map((e) => ({
+          id: e.id,
+          status: e.status!,
+        }));
+
+        attendances.push({
+          date,
+          employees,
+          action: "update",
+        });
+      }
+    });
+
+    if (attendances.length === 0) {
+      toast.error("Tidak ada data untuk disimpan");
+      return;
+    }
+
+    try {
+      const validatedData = AttendanceValidation.BATCH(totalEmployees).parse({
+        attendances,
+      });
+
+      saveMutation.mutate(validatedData);
+    } catch (error) {
+      console.error("Validation error:", error);
+      toast.error("Validasi gagal. Pastikan semua data lengkap.");
+    }
   };
 
-  const fillDateWithHadir = (date: string) => {
-    setRecords((prev) =>
-      prev.map((record) => ({
-        ...record,
-        attendance: {
-          ...record.attendance,
-          [date]: "hadir",
-        },
-      }))
-    );
-  };
+  const handleCancel = () => {
+    const initialDates: UIFormInput["dates"] = {};
 
-  const clearDateData = (date: string) => {
-    setRecords((prev) =>
-      prev.map((record) => ({
-        ...record,
-        attendance: {
-          ...record.attendance,
-          [date]: null,
-        },
-      }))
-    );
-  };
+    dates.forEach((date) => {
+      const dateStr = formatDate(date);
+      const hasData = initialRecords.some(
+        (r) =>
+          r.attendance[dateStr] !== null && r.attendance[dateStr] !== undefined,
+      );
 
-  const handleConfirm = () => {
-    onConfirm?.(records);
+      if (hasData) {
+        initialDates[dateStr] = {
+          isActive: true,
+          employees: employees.map((emp) => {
+            const record = initialRecords.find((r) => r.employeeId === emp.id);
+            return {
+              id: emp.id,
+              name: emp.name,
+              status: record?.attendance[dateStr] || null,
+            };
+          }),
+        };
+      }
+    });
+
+    form.reset({ dates: initialDates });
     setIsEditMode(false);
   };
 
-  const getStatusBadge = (status: "hadir" | "tidak_hadir" | null) => {
-    if (status === "hadir") {
+  const getStatusBadge = (status: AttendanceStatus | null) => {
+    if (status === AttendanceStatus.PRESENT) {
       return (
         <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-sm font-medium text-green-800">
           Hadir
         </span>
       );
     }
-    if (status === "tidak_hadir") {
+    if (status === AttendanceStatus.LEAVE) {
+      return (
+        <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-medium text-blue-800">
+          Izin
+        </span>
+      );
+    }
+    if (status === AttendanceStatus.SICK) {
+      return (
+        <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-sm font-medium text-yellow-800">
+          Sakit
+        </span>
+      );
+    }
+    if (status === AttendanceStatus.ABSENT) {
       return (
         <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-sm font-medium text-red-800">
           Tidak Hadir
@@ -184,166 +343,265 @@ export function AttendanceTable({
     const newDate = new Date(displayDate);
     newDate.setDate(newDate.getDate() - 7);
     setDisplayDate(newDate);
+    onWeekChange?.(newDate);
   };
 
   const goToNextWeek = () => {
     const newDate = new Date(displayDate);
     newDate.setDate(newDate.getDate() + 7);
     setDisplayDate(newDate);
+    onWeekChange?.(newDate);
+  };
+
+  const getIsNextWeekDisabled = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const nextWeekStart = new Date(weekStart);
+    nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+    nextWeekStart.setHours(0, 0, 0, 0);
+    return nextWeekStart > today;
   };
 
   const isNextWeekDisabled = getIsNextWeekDisabled();
 
-  const hasDateData = (date: string): boolean => {
-    return records.some(
-      (record) =>
-        record.attendance[date] !== null &&
-        record.attendance[date] !== undefined
-    );
-  };
+  const formDates = form.watch("dates");
+  const activeDatesCount = Object.values(formDates).filter(
+    (d) => d?.isActive,
+  ).length;
 
   return (
-    <div className="flex flex-col max-h-[680px] overflow-hidden">
-      {/* Header with navigation */}
-      <div className="flex items-center justify-between p-4 bg-white">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={goToPreviousWeek}>
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span className="text-sm font-medium min-w-48">
-            {weekStart.toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "short",
-            })}{" "}
-            -{" "}
-            {weekEnd.toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={goToNextWeek}
-            disabled={isNextWeekDisabled}
-            className={
-              isNextWeekDisabled ? "opacity-50 cursor-not-allowed" : ""
-            }
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-        <div className="flex gap-2">
-          {!isEditMode ? (
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="flex flex-col max-h-[680px] overflow-hidden"
+      >
+        <div className="flex items-center justify-between p-4 bg-white">
+          <div className="flex items-center gap-2">
             <Button
-              onClick={() => setIsEditMode(true)}
-              className="bg-blue-500 hover:bg-blue-600"
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={goToPreviousWeek}
+              disabled={isEditMode}
             >
-              Pengaturan Absensi
+              <ChevronLeft className="w-4 h-4" />
             </Button>
-          ) : (
+            <span className="text-sm font-medium min-w-48">
+              {weekStart.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+              })}{" "}
+              -{" "}
+              {weekEnd.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
             <Button
-              onClick={handleConfirm}
-              className="bg-green-500 hover:bg-green-600"
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={goToNextWeek}
+              disabled={isNextWeekDisabled || isEditMode}
             >
-              Konfirmasi
+              <ChevronRight className="w-4 h-4" />
             </Button>
-          )}
-          <Button variant="outline" size="sm">
-            Export PDF
-          </Button>
-        </div>
-      </div>
-
-      {/* Table container with scroll */}
-      <div className="relative flex-1 overflow-auto rounded-md border">
-        <Table noWrapper>
-          <TableHeader className="sticky top-0 bg-white z-10">
-            <TableRow>
-              <TableHead className="sticky left-0 bg-white min-w-20">
-                Nama
-              </TableHead>
-              {dates.map((date) => (
-                <TableHead
-                  key={getDateString(date)}
-                  className="text-center min-w-36 whitespace-nowrap py-3"
+          </div>
+          <div className="flex gap-2">
+            {!isEditMode ? (
+              <>
+                <Button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsEditMode(true);
+                  }}
+                  disabled={isLoading || employees.length === 0}
                 >
-                  <div className="flex w-full justify-center items-center gap-2">
-                    <div>
-                      <div>{getDayName(date)}</div>
-                      <div className="text-xs font-normal text-gray-600">
-                        {date.toLocaleDateString("id-ID", {
-                          month: "long",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </div>
-                    </div>
-                    {isEditMode && (
-                      <div>
-                        {!hasDateData(getDateString(date)) ? (
-                          <Button
-                            variant={"ghost"}
-                            size={"sm"}
-                            onClick={() =>
-                              fillDateWithHadir(getDateString(date))
-                            }
-                            title="Isi semua hari ini dengan Hadir"
-                          >
-                            <Plus className="w-4 h-4 text-primary" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant={"ghost"}
-                            size={"sm"}
-                            onClick={() => clearDateData(getDateString(date))}
-                            title="Hapus semua data pada hari ini"
-                          >
-                            <X className="w-4 h-4 text-red-600" />
-                          </Button>
+                  Pengaturan Absensi
+                </Button>
+                <Button type="button" variant="outline" size="sm">
+                  Export PDF
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="submit"
+                  disabled={saveMutation.isPending || activeDatesCount === 0}
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {saveMutation.isPending
+                    ? "Menyimpan..."
+                    : `Simpan ${activeDatesCount} hari`}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancel}
+                  disabled={saveMutation.isPending}
+                >
+                  Batal
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="relative flex-1 overflow-auto rounded-md border">
+          <Table noWrapper>
+            <TableHeader className="sticky top-0 bg-white z-10">
+              <TableRow>
+                <TableHead className="sticky left-0 bg-white min-w-20 z-20">
+                  Nama
+                </TableHead>
+                {dates.map((date) => {
+                  const dateStr = formatDate(date);
+                  const isActive = formDates[dateStr]?.isActive || false;
+
+                  return (
+                    <TableHead
+                      key={dateStr}
+                      className={`text-center min-w-36 whitespace-nowrap py-3 ${
+                        isActive && isEditMode
+                          ? formDates[dateStr]?.employees.every(
+                              (e) => e.status === null,
+                            )
+                            ? "bg-red-50"
+                            : "bg-blue-50"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex w-full justify-center items-center gap-2">
+                        <div>
+                          <div>{getDayName(date)}</div>
+                          <div className="text-xs font-normal text-gray-600">
+                            {date.toLocaleDateString("id-ID", {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </div>
+                        </div>
+                        {isEditMode && (
+                          <div>
+                            {!isActive ? (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => activateDateForEditing(dateStr)}
+                                title="Tambahkan hari ini ke form"
+                              >
+                                <Plus className="w-4 h-4 text-primary" />
+                              </Button>
+                            ) : (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deactivateDate(dateStr)}
+                                title="Hapus hari ini dari form"
+                              >
+                                <X className="w-4 h-4 text-red-600" />
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {records.map((record) => (
-              <TableRow key={record.employeeId}>
-                <TableCell className="font-medium sticky left-0 bg-white">
-                  {record.employeeName}
-                </TableCell>
-                {dates.map((date) => {
-                  const dateStr = getDateString(date);
-                  const status = record.attendance[dateStr];
-                  return (
-                    <TableCell key={dateStr} className="text-center py-2">
-                      {isEditMode ? (
-                        <button
-                          onClick={() =>
-                            toggleAttendance(record.employeeId, dateStr)
-                          }
-                          className="w-full h-full py-2 rounded-full hover:bg-gray-50 transition-colors cursor-pointer inline-flex items-center justify-center"
-                        >
-                          {getStatusBadge(status)}
-                        </button>
-                      ) : (
-                        <div className="py-2 inline-flex items-center justify-center">
-                          {getStatusBadge(status)}
-                        </div>
-                      )}
-                    </TableCell>
+                    </TableHead>
                   );
                 })}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+            </TableHeader>
+
+            <TableBody>
+              {isLoading
+                ? [...Array(10)].map((_, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      <TableCell className="sticky left-0 bg-white">
+                        <Skeleton className="h-5 w-full" />
+                      </TableCell>
+                      {[...Array(dates.length)].map((_, colIndex) => (
+                        <TableCell key={colIndex}>
+                          <Skeleton className="h-5 w-20 mx-auto" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                : employees.map((employee) => (
+                    <TableRow key={employee.id}>
+                      <TableCell className="font-medium sticky left-0 bg-white z-10">
+                        {employee.name}
+                      </TableCell>
+                      {dates.map((date) => {
+                        const dateStr = formatDate(date);
+                        const dateData = formDates[dateStr];
+                        const isActive = dateData?.isActive || false;
+                        const isMarkedForDeletion =
+                          isActive &&
+                          dateData?.employees.every((e) => e.status === null);
+
+                        const initialRecord = initialRecords.find(
+                          (r) => r.employeeId === employee.id,
+                        );
+                        const displayStatus: AttendanceStatus | null =
+                          initialRecord?.attendance?.[dateStr] ?? null;
+
+                        const employeeIndex =
+                          dateData?.employees.findIndex(
+                            (e) => e.id === employee.id,
+                          ) ?? -1;
+
+                        return (
+                          <TableCell
+                            key={dateStr}
+                            className={`text-center py-2 ${
+                              isActive && isEditMode
+                                ? isMarkedForDeletion
+                                  ? "bg-red-50"
+                                  : "bg-blue-50"
+                                : ""
+                            }`}
+                          >
+                            {isActive && isEditMode && employeeIndex !== -1 ? (
+                              <FormField
+                                control={form.control}
+                                name={`dates.${dateStr}.employees.${employeeIndex}.status`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormControl>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          toggleAttendance(dateStr, employee.id)
+                                        }
+                                        className="w-full h-full py-2 rounded-full hover:bg-gray-50 transition-colors cursor-pointer inline-flex items-center justify-center"
+                                      >
+                                        {getStatusBadge(field.value)}
+                                      </button>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            ) : (
+                              <div className="py-2 inline-flex items-center justify-center">
+                                {getStatusBadge(displayStatus)}
+                              </div>
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+            </TableBody>
+          </Table>
+        </div>
+      </form>
+    </Form>
   );
 }

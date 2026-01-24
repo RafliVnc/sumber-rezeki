@@ -18,8 +18,8 @@ type Payroll struct {
 	IsPaid         bool               `gorm:"column:is_paid;not null;default:false"`
 	PaidAt         *time.Time         `gorm:"column:paid_at"`
 
-	EmployeeID int       `gorm:"column:employee_id;not null"`
-	Employee   *Employee `gorm:"foreignKey:EmployeeID;references:ID"`
+	EmployeeId int       `gorm:"column:employee_id;not null"`
+	Employee   *Employee `gorm:"foreignKey:EmployeeId;references:ID"`
 	PeriodID   int       `gorm:"column:period_id;not null"`
 	Period     *Period   `gorm:"foreignKey:PeriodID;references:ID"`
 

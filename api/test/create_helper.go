@@ -57,7 +57,7 @@ func CreateSales(total int) []entity.Sales {
 
 		// Create Sales
 		sales[i] = entity.Sales{
-			EmployeeID: employee.ID,
+			EmployeeId: employee.ID,
 			Phone:      "123456" + strconv.Itoa(i),
 		}
 
@@ -105,7 +105,7 @@ func CreateSalesWithRoutes(count int, routeIDs []int) []entity.Sales {
 
 		// Create Sales
 		sales := entity.Sales{
-			EmployeeID: employee.ID,
+			EmployeeId: employee.ID,
 			Phone:      fmt.Sprintf("123456%d", i),
 		}
 

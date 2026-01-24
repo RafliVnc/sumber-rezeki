@@ -63,4 +63,7 @@ func (c *RouteConfig) SetupAuthRoute() {
 	c.App.Post("/api/employees", c.EmployeeController.Create)
 	c.App.Put("/api/employees/:id", c.EmployeeController.Update)
 	c.App.Delete("/api/employees/:id", c.EmployeeController.Delete)
+
+	// Attendace
+	c.App.Get("/api/attendance", c.EmployeeController.FindAllWithAttendances)
 }

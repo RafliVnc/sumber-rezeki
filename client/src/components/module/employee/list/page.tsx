@@ -1,6 +1,5 @@
 "use client";
 
-import { DynamicBreadcrumb } from "@/components/ui/breadcrumb/dynamic-breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
