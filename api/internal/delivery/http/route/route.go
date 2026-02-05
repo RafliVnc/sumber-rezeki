@@ -9,14 +9,15 @@ import (
 )
 
 type RouteConfig struct {
-	App                *fiber.App
-	UserController     *http.UserController
-	SalesController    *http.SalesController
-	HelloController    *http.HelloController
-	RouteController    *http.RouteController
-	EmployeeController *http.EmployeeController
-	AuthMiddleware     fiber.Handler
-	Config             *viper.Viper
+	App                          *fiber.App
+	UserController               *http.UserController
+	SalesController              *http.SalesController
+	HelloController              *http.HelloController
+	RouteController              *http.RouteController
+	EmployeeController           *http.EmployeeController
+	EmployeeAttendanceController *http.EmployeeAttendanceController
+	AuthMiddleware               fiber.Handler
+	Config                       *viper.Viper
 }
 
 func (c *RouteConfig) Setup() {
@@ -66,4 +67,6 @@ func (c *RouteConfig) SetupAuthRoute() {
 
 	// Attendace
 	c.App.Get("/api/attendance", c.EmployeeController.FindAllWithAttendances)
+	c.App.Post("/api/attendance/batch", c.EmployeeAttendanceController.Upsert)
+
 }

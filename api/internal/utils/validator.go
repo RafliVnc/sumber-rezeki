@@ -23,7 +23,13 @@ func InitValidator() {
 func ValidateStruct(s interface{}) ([]model.ErrorDetails, string, error) {
 	err := validate.Struct(s)
 	if err != nil {
+
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			return nil, "Invalid validation config", err
+		}
+
 		errors := err.(validator.ValidationErrors)
+
 		var details []model.ErrorDetails
 		for _, e := range errors {
 			details = append(details, model.ErrorDetails{

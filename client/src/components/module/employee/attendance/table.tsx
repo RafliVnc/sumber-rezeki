@@ -65,7 +65,7 @@ const getNextStatus = (
 
 const ApiSaveAttendance = async (data: BatchAttendanceInput) => {
   return await api<{ message: string }, BatchAttendanceInput>({
-    url: "api/attendance/batch",
+    url: "attendance/batch",
     method: "POST",
     body: data,
   });
@@ -433,9 +433,7 @@ export function AttendanceTable({
                   className="bg-green-500 hover:bg-green-600"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {saveMutation.isPending
-                    ? "Menyimpan..."
-                    : `Simpan ${activeDatesCount} hari`}
+                  {saveMutation.isPending ? "Menyimpan..." : `Simpan`}
                 </Button>
                 <Button
                   type="button"
@@ -453,9 +451,9 @@ export function AttendanceTable({
 
         <div className="relative flex-1 overflow-auto rounded-md border">
           <Table noWrapper>
-            <TableHeader className="sticky top-0 bg-white z-10">
+            <TableHeader className="sticky top-0 bg-white z-30">
               <TableRow>
-                <TableHead className="sticky left-0 bg-white min-w-20 z-20">
+                <TableHead className="sticky left-0 bg-white min-w-20 z-30">
                   Nama
                 </TableHead>
                 {dates.map((date) => {

@@ -10,11 +10,19 @@ type EmployeeAttendanceResponse struct {
 	PeriodId   int       `json:"periodId"`
 }
 
-type CreateEmployeeAttendanceRequest struct {
-	Action     string `json:"action" validate:"required,oneof='upsert' 'delete'"`
-	Date       string `json:"date" validate:"required"`
-	Status     string `json:"status" validate:"required,oneof= PRESENT ABSENT LEAVE SICK"`
-	EmployeeId int    `jason:"employeeId" validate:"required"`
+type UpsertEmployeeAttendanceRequest struct {
+	Attendances []AttendanceAction `json:"attendances" validate:"required,dive"`
+}
+
+type AttendanceAction struct {
+	Action    string               `json:"action" validate:"required,oneof=update delete"`
+	Date      string               `json:"date" validate:"required"`
+	Employees []EmployeeAttendance `json:"employees" validate:"omitempty,dive"`
+}
+
+type EmployeeAttendance struct {
+	ID     int    `json:"id" validate:"required"`
+	Status string `json:"status" validate:"required,oneof=PRESENT ABSENT LEAVE SICK"`
 }
 
 type FindAllEmployeeAttendanceRequest struct {

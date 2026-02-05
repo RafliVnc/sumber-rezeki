@@ -9,10 +9,10 @@ import (
 
 type EmployeeAttendance struct {
 	ID     int                   `gorm:"primaryKey"`
-	Date   time.Time             `gorm:"type:date;not null"`
+	Date   time.Time             `gorm:"type:date;not null;employee_attendances_date_employee_id_key"`
 	Status enum.AttendanceStatus `gorm:"type:absen_status;column:status;not null"`
 
-	EmployeeId int       `gorm:"column:employee_id;not null"`
+	EmployeeId int       `gorm:"column:employee_id;not null;employee_attendances_date_employee_id_key"`
 	Employee   *Employee `gorm:"foreignKey:EmployeeId;references:ID"`
 
 	PeriodId int     `gorm:"column:period_id;not null"`
