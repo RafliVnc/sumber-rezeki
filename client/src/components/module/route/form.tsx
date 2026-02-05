@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import Required from "@/components/ui/required";
 
 const ApiFormRoute = async ({
   values,
@@ -88,7 +89,9 @@ export default function FormRoute({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nama*</FormLabel>
+                <FormLabel>
+                  <Required children={"Nama"} />
+                </FormLabel>
                 <FormControl>
                   <Input type="text" placeholder="Nama" {...field} />
                 </FormControl>

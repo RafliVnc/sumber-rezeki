@@ -89,7 +89,7 @@ export default function UserPage() {
   const handleRoleFilterChange = (values: Set<string>) => {
     handleFilterChange(
       "roles",
-      values.size > 0 ? Array.from(values) : undefined
+      values.size > 0 ? Array.from(values) : undefined,
     );
   };
 
@@ -161,7 +161,7 @@ export default function UserPage() {
                 setIsOpen(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="size-4" />
               Tambah Pengguna
             </Button>
           </div>

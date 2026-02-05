@@ -16,15 +16,15 @@ export default function SettingsLayout({
   const currentTab = pathname.includes("/list")
     ? "list"
     : pathname.includes("/payroll")
-    ? "payroll"
-    : "attendance";
+      ? "payroll"
+      : "attendance";
 
   const title =
     currentTab === "attendance"
       ? "Absensi"
       : currentTab === "payroll"
-      ? "Gaji"
-      : "Karyawan";
+        ? "Gaji"
+        : "Karyawan";
 
   const handleTabChange = (value: string) => {
     router.push(`/employee/${value}`);

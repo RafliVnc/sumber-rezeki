@@ -123,7 +123,7 @@ export default function RoutePage() {
                 setIsOpen(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="size-4" />
               Tambah Rute
             </Button>
           </div>

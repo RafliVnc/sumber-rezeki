@@ -128,7 +128,7 @@ export default function SalesPage() {
                 setIsOpen(true);
               }}
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="size-4" />
               Tambah Sales
             </Button>
           </div>

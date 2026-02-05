@@ -4,7 +4,15 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus, X, Save } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  X,
+  Save,
+  Wrench,
+  FileDown,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -375,33 +383,34 @@ export function AttendanceTable({
         onSubmit={form.handleSubmit(handleFormSubmit)}
         className="flex flex-col max-h-[680px] overflow-hidden"
       >
-        <div className="flex items-center justify-between p-4 bg-white">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between mb-4 bg-white">
+          <div className="flex items-center  gap-1">
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="icon-sm"
               onClick={goToPreviousWeek}
               disabled={isEditMode}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <span className="text-sm font-medium min-w-48">
+            <span className="md:text-md font-bold text-center min-w-48">
               {weekStart.toLocaleDateString("id-ID", {
                 day: "numeric",
-                month: "short",
+                month: "long",
+                year: "numeric",
               })}{" "}
               -{" "}
               {weekEnd.toLocaleDateString("id-ID", {
                 day: "numeric",
-                month: "short",
+                month: "long",
                 year: "numeric",
               })}
             </span>
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="icon-sm"
               onClick={goToNextWeek}
               disabled={isNextWeekDisabled || isEditMode}
             >
@@ -413,15 +422,23 @@ export function AttendanceTable({
               <>
                 <Button
                   type="button"
+                  size="sm"
                   onClick={(e) => {
                     e.preventDefault();
                     setIsEditMode(true);
                   }}
                   disabled={isLoading || employees.length === 0}
                 >
+                  <Wrench className="size-4" />
                   Pengaturan Absensi
                 </Button>
-                <Button type="button" variant="outline" size="sm">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  disabled={isLoading || employees.length === 0}
+                >
+                  <FileDown className="size-4" />
                   Export PDF
                 </Button>
               </>
@@ -429,6 +446,7 @@ export function AttendanceTable({
               <>
                 <Button
                   type="submit"
+                  size="sm"
                   disabled={saveMutation.isPending || activeDatesCount === 0}
                   className="bg-green-500 hover:bg-green-600"
                 >
@@ -517,85 +535,103 @@ export function AttendanceTable({
             </TableHeader>
 
             <TableBody>
-              {isLoading
-                ? [...Array(10)].map((_, rowIndex) => (
-                    <TableRow key={rowIndex}>
-                      <TableCell className="sticky left-0 bg-white">
-                        <Skeleton className="h-5 w-full" />
+              {isLoading ? (
+                [...Array(10)].map((_, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    <TableCell className="sticky left-0 bg-white">
+                      <Skeleton className="h-5 w-full" />
+                    </TableCell>
+                    {[...Array(dates.length)].map((_, colIndex) => (
+                      <TableCell key={colIndex}>
+                        <Skeleton className="h-5 w-20 mx-auto" />
                       </TableCell>
-                      {[...Array(dates.length)].map((_, colIndex) => (
-                        <TableCell key={colIndex}>
-                          <Skeleton className="h-5 w-20 mx-auto" />
+                    ))}
+                  </TableRow>
+                ))
+              ) : employees.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={dates.length + 1}
+                    className="h-64 text-center"
+                  >
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                      <p className="text-lg font-medium">
+                        Tidak ada data karyawan
+                      </p>
+                      <p className="text-sm">
+                        Silakan tambahkan karyawan terlebih dahulu
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                employees.map((employee) => (
+                  <TableRow key={employee.id}>
+                    <TableCell className="font-semibold sticky left-0 bg-white z-10">
+                      {employee.name}
+                    </TableCell>
+                    {dates.map((date) => {
+                      const dateStr = formatDate(date);
+                      const dateData = formDates[dateStr];
+                      const isActive = dateData?.isActive || false;
+                      const isMarkedForDeletion =
+                        isActive &&
+                        dateData?.employees.every((e) => e.status === null);
+
+                      const initialRecord = initialRecords.find(
+                        (r) => r.employeeId === employee.id,
+                      );
+                      const displayStatus: AttendanceStatus | null =
+                        initialRecord?.attendance?.[dateStr] ?? null;
+
+                      const employeeIndex =
+                        dateData?.employees.findIndex(
+                          (e) => e.id === employee.id,
+                        ) ?? -1;
+
+                      return (
+                        <TableCell
+                          key={dateStr}
+                          className={`text-center py-2 ${
+                            isActive && isEditMode
+                              ? isMarkedForDeletion
+                                ? "bg-red-50"
+                                : "bg-blue-50"
+                              : ""
+                          }`}
+                        >
+                          {isActive && isEditMode && employeeIndex !== -1 ? (
+                            <FormField
+                              control={form.control}
+                              name={`dates.${dateStr}.employees.${employeeIndex}.status`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormControl>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        toggleAttendance(dateStr, employee.id)
+                                      }
+                                      className="w-full h-full py-1 rounded-full hover:bg-gray-50 transition-colors cursor-pointer inline-flex items-center justify-center"
+                                    >
+                                      {getStatusBadge(field.value)}
+                                    </button>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          ) : (
+                            <div className="py-1 inline-flex items-center justify-center">
+                              {getStatusBadge(displayStatus)}
+                            </div>
+                          )}
                         </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                : employees.map((employee) => (
-                    <TableRow key={employee.id}>
-                      <TableCell className="font-medium sticky left-0 bg-white z-10">
-                        {employee.name}
-                      </TableCell>
-                      {dates.map((date) => {
-                        const dateStr = formatDate(date);
-                        const dateData = formDates[dateStr];
-                        const isActive = dateData?.isActive || false;
-                        const isMarkedForDeletion =
-                          isActive &&
-                          dateData?.employees.every((e) => e.status === null);
-
-                        const initialRecord = initialRecords.find(
-                          (r) => r.employeeId === employee.id,
-                        );
-                        const displayStatus: AttendanceStatus | null =
-                          initialRecord?.attendance?.[dateStr] ?? null;
-
-                        const employeeIndex =
-                          dateData?.employees.findIndex(
-                            (e) => e.id === employee.id,
-                          ) ?? -1;
-
-                        return (
-                          <TableCell
-                            key={dateStr}
-                            className={`text-center py-2 ${
-                              isActive && isEditMode
-                                ? isMarkedForDeletion
-                                  ? "bg-red-50"
-                                  : "bg-blue-50"
-                                : ""
-                            }`}
-                          >
-                            {isActive && isEditMode && employeeIndex !== -1 ? (
-                              <FormField
-                                control={form.control}
-                                name={`dates.${dateStr}.employees.${employeeIndex}.status`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormControl>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          toggleAttendance(dateStr, employee.id)
-                                        }
-                                        className="w-full h-full py-2 rounded-full hover:bg-gray-50 transition-colors cursor-pointer inline-flex items-center justify-center"
-                                      >
-                                        {getStatusBadge(field.value)}
-                                      </button>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            ) : (
-                              <div className="py-2 inline-flex items-center justify-center">
-                                {getStatusBadge(displayStatus)}
-                              </div>
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))}
+                      );
+                    })}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>

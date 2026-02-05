@@ -8,7 +8,6 @@ import { AppProvider } from "@/context/app-context";
 import { ConfirmationDialogProvider } from "@/context/dialog-context";
 
 const nunitoSans = Nunito_Sans({
-  variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
@@ -26,7 +25,7 @@ export default function RootLayout({
     <html lang="en">
       <AppProvider>
         <ConfirmationDialogProvider>
-          <body className={`${nunitoSans.variable} antialiased`}>
+          <body className={`${nunitoSans.className} antialiased`}>
             <Providers>{children}</Providers>
             <Toaster richColors position="top-right" />
           </body>

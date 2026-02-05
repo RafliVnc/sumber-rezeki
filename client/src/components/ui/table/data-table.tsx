@@ -25,6 +25,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
 import { DataTablePagination } from "./data-table-pagination";
+import { Folders } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -109,7 +110,7 @@ export function DataTable<TData, TValue>({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   );
@@ -140,7 +141,7 @@ export function DataTable<TData, TValue>({
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -151,9 +152,12 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-64 text-center"
                 >
-                  No results.
+                  <div className="flex flex-col items-center justify-center text-gray-500">
+                    {/* <Folders className="size-20" /> */}
+                    <p className="text-lg font-medium">Data tidak ditemukan</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
