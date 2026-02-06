@@ -1,7 +1,7 @@
 type Sales = {
   id: number;
-  name: string;
   phone: string;
   createdAt: Date;
+  Employee: Employee;
   Routes?: Route[];
 };

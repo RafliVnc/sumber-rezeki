@@ -22,6 +22,7 @@ import { Loader2 } from "lucide-react";
 import { SalesDummy } from "@/dummy/sales-dummy";
 import { MultiSelect } from "@/components/ui/multiple-select";
 
+// TODO: Refactor delete Post request
 const apiFormSales = async ({
   values,
   isEdit,
@@ -60,7 +61,7 @@ export default function FormSales({
   const isEdit = !!sales;
 
   const dummyFormSales: z.infer<typeof SalesValidation.MAIN> = {
-    name: sales?.name || SalesDummy.name,
+    name: sales?.Employee.name || SalesDummy.Employee.name,
     phone: sales?.phone || SalesDummy.phone,
     routeIds: sales?.Routes?.map((r) => r.id) || [],
   };
@@ -84,7 +85,7 @@ export default function FormSales({
   const submitMutation = useMutation({
     mutationFn: apiFormSales,
     onSuccess: () => {
-      toast.success("Sales berhasil ditambahkan");
+      toast.success(`Sales berhasil ${isEdit ? "diubah" : "ditambahkan"}`);
       queryClient.invalidateQueries({ queryKey: ["sales"] });
       form.reset();
       handleClose();

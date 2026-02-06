@@ -15,6 +15,14 @@ export const columns = ({
   {
     accessorKey: "name",
     header: "Name",
+    cell: ({ row }) => {
+      const sales = row.original;
+      return (
+        <div className="flex items-center gap-2">
+          <span>{sales.Employee.name}</span>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "phone",
@@ -41,7 +49,7 @@ export const columns = ({
             variant="ghost"
             className="size-6"
             onClick={() => {
-              handleDelete(sales.id, sales.name);
+              handleDelete(sales.id, sales.Employee.name);
             }}
           >
             <Trash2 className="text-red-500" />
