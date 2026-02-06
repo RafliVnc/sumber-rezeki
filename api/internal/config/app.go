@@ -36,6 +36,7 @@ func Bootstrap(config *BootstrapConfig) {
 	employeeRepository := repository.NewEmployeeRepository(config.Log)
 	employeeAttendanceRepository := repository.NewEmployeeAttendanceRepository(config.Log)
 	periodRepository := repository.NewPeriodRepository(config.Log)
+	factoryRepository := repository.NewFactoryRepository(config.Log)
 
 	// UseCase
 	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validate, userRepository, tokenUtil)
@@ -44,6 +45,7 @@ func Bootstrap(config *BootstrapConfig) {
 	periodUseCase := usecase.NewPeriodUseCase(config.DB, config.Log, config.Validate, periodRepository)
 	employeeUseCase := usecase.NewEmployeeUseCase(config.DB, config.Log, config.Validate, employeeRepository, routeRepository, salesRepository)
 	employeeAttendanceUseCase := usecase.NewEmployeeAttendanceUseCase(config.DB, config.Log, config.Validate, employeeAttendanceRepository, periodUseCase)
+	factoryUseCase := usecase.NewFactoryUseCase(config.DB, config.Log, config.Validate, factoryRepository)
 
 	// Controller
 	userController := http.NewUserController(userUseCase, config.Log)
@@ -51,6 +53,7 @@ func Bootstrap(config *BootstrapConfig) {
 	salesController := http.NewSalesController(salesUseCase, config.Log)
 	employeeController := http.NewEmployeeController(employeeUseCase, config.Log)
 	employeeAttendanceController := http.NewEmployeeAttendanceController(employeeAttendanceUseCase, config.Log)
+	factoryController := http.NewFactoryController(factoryUseCase, config.Log)
 
 	// hello
 	helloController := http.NewHelloController()
@@ -65,6 +68,7 @@ func Bootstrap(config *BootstrapConfig) {
 		RouteController:              routeController,
 		EmployeeController:           employeeController,
 		EmployeeAttendanceController: employeeAttendanceController,
+		FactoryController:            factoryController,
 		HelloController:              helloController,
 		AuthMiddleware:               authMiddleware,
 	}

@@ -16,6 +16,7 @@ type RouteConfig struct {
 	RouteController              *http.RouteController
 	EmployeeController           *http.EmployeeController
 	EmployeeAttendanceController *http.EmployeeAttendanceController
+	FactoryController            *http.FactoryController
 	AuthMiddleware               fiber.Handler
 	Config                       *viper.Viper
 }
@@ -68,4 +69,9 @@ func (c *RouteConfig) SetupAuthRoute() {
 	c.App.Get("/api/attendance", c.EmployeeController.FindAllWithAttendances)
 	c.App.Post("/api/attendance/batch", c.EmployeeAttendanceController.Upsert)
 
+	// factory
+	c.App.Get("/api/factories", c.FactoryController.FindAll)
+	c.App.Post("/api/factories", c.FactoryController.Create)
+	c.App.Put("/api/factories/:id", c.FactoryController.Update)
+	c.App.Delete("/api/factories/:id", c.FactoryController.Delete)
 }
