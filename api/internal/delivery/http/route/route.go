@@ -47,7 +47,6 @@ func (c *RouteConfig) SetupAuthRoute() {
 	c.App.Delete("/api/users/:id", c.UserController.Delete)
 
 	// sales
-	c.App.Post("/api/sales", c.SalesController.Create)
 	c.App.Get("/api/sales", c.SalesController.FindAll)
 	c.App.Put("/api/sales/:id", c.SalesController.Update)
 	c.App.Delete("/api/sales/:id", c.SalesController.Delete)

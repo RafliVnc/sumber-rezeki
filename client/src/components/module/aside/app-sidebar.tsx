@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CircleUser, User } from "lucide-react";
+import { CircleUser, Truck, User, Waypoints } from "lucide-react";
 
 import {
   Sidebar,
@@ -28,6 +28,18 @@ const data = {
       url: "/sales",
       activePath: "/sales",
       icon: User,
+    },
+    {
+      title: "Kilang",
+      url: "/factories",
+      activePath: "/factories",
+      icon: Waypoints,
+    },
+    {
+      title: "Kendaraan",
+      url: "/Vehicles",
+      activePath: "/Vehicles",
+      icon: Truck,
     },
   ],
 };

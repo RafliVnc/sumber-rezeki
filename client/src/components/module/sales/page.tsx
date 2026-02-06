@@ -120,17 +120,6 @@ export default function SalesPage() {
                 />
               </div>
             </div>
-
-            <Button
-              size="sm"
-              className="h-8"
-              onClick={() => {
-                setIsOpen(true);
-              }}
-            >
-              <Plus className="size-4" />
-              Tambah Sales
-            </Button>
           </div>
 
           <DataTable

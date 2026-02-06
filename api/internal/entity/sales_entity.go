@@ -17,7 +17,7 @@ type Sales struct {
 	UpdatedAt time.Time      `gorm:"column:updated_at;autoCreateTime:milli;autoUpdateTime:milli"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index"`
 
-	Routes []Route `gorm:"many2many:sales_routes;"`
+	Routes []Route `gorm:"many2many:sales_routes;constraint:OnDelete:CASCADE;"`
 }
 
 func (s *Sales) TableName() string {

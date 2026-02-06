@@ -40,7 +40,7 @@ func Bootstrap(config *BootstrapConfig) {
 	// UseCase
 	userUseCase := usecase.NewUserUseCase(config.DB, config.Log, config.Validate, userRepository, tokenUtil)
 	routeUseCase := usecase.NewRouteUseCase(config.DB, config.Log, config.Validate, routeRepository, routeRepository)
-	salesUseCase := usecase.NewSalesUseCase(config.DB, config.Log, config.Validate, salesRepository, routeRepository)
+	salesUseCase := usecase.NewSalesUseCase(config.DB, config.Log, config.Validate, salesRepository, routeRepository, employeeRepository)
 	periodUseCase := usecase.NewPeriodUseCase(config.DB, config.Log, config.Validate, periodRepository)
 	employeeUseCase := usecase.NewEmployeeUseCase(config.DB, config.Log, config.Validate, employeeRepository, routeRepository, salesRepository)
 	employeeAttendanceUseCase := usecase.NewEmployeeAttendanceUseCase(config.DB, config.Log, config.Validate, employeeAttendanceRepository, periodUseCase)

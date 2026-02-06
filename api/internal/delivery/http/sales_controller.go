@@ -22,24 +22,6 @@ func NewSalesController(useCase usecase.SalesUseCase, logger *logrus.Logger) *Sa
 	}
 }
 
-func (c *SalesController) Create(ctx *fiber.Ctx) error {
-	request := new(model.CreateSalesRequest)
-	err := ctx.BodyParser(request)
-	if err != nil {
-		c.Log.Warnf("Failed to parse request body : %+v", err)
-		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
-	}
-
-	response, err := c.SalesUseCase.Create(ctx.UserContext(), request)
-	if err != nil {
-		c.Log.Warnf("Failed to create sales : %+v", err)
-		return err
-	}
-
-	return ctx.Status(fiber.StatusCreated).
-		JSON(model.WebResponse[*model.SalesResponse]{Data: response})
-}
-
 func (c *SalesController) FindAll(ctx *fiber.Ctx) error {
 
 	request := &model.FindAllSalesRequest{

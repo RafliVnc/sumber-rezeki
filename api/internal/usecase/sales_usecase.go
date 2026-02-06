@@ -16,111 +16,29 @@ import (
 )
 
 type SalesUseCase interface {
-	Create(ctx context.Context, request *model.CreateSalesRequest) (*model.SalesResponse, error)
 	FindAll(ctx context.Context, request *model.FindAllSalesRequest) ([]model.SalesResponse, int64, error)
 	Update(ctx context.Context, request *model.UpdateSalesRequest) (*model.SalesResponse, error)
 	Delete(ctx context.Context, request *model.DeleteSalesRequest) error
 }
 
 type SalesUseCaseImpl struct {
-	DB              *gorm.DB
-	Log             *logrus.Logger
-	Validate        *validator.Validate
-	SalesRepository repository.SalesRepository
-	RouteRepository repository.RouteRepository
+	DB                 *gorm.DB
+	Log                *logrus.Logger
+	Validate           *validator.Validate
+	SalesRepository    repository.SalesRepository
+	RouteRepository    repository.RouteRepository
+	EmployeeRepository repository.EmployeeRepository
 }
 
-func NewSalesUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate, salesRepository repository.SalesRepository, routeRepository repository.RouteRepository) SalesUseCase {
+func NewSalesUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate, salesRepository repository.SalesRepository, routeRepository repository.RouteRepository, employeeRepository repository.EmployeeRepository) SalesUseCase {
 	return &SalesUseCaseImpl{
-		DB:              db,
-		Log:             logger,
-		Validate:        validate,
-		SalesRepository: salesRepository,
-		RouteRepository: routeRepository,
+		DB:                 db,
+		Log:                logger,
+		Validate:           validate,
+		SalesRepository:    salesRepository,
+		RouteRepository:    routeRepository,
+		EmployeeRepository: employeeRepository,
 	}
-}
-
-func (s *SalesUseCaseImpl) Create(ctx context.Context, request *model.CreateSalesRequest) (*model.SalesResponse, error) {
-	tx := s.DB.WithContext(ctx).Begin()
-	defer tx.Rollback()
-
-	//check request validation
-	details, errorMessage, err := utils.ValidateStruct(request)
-	if err != nil || details != nil {
-		s.Log.Warnf("Failed to validate request: %+v", details)
-		return nil, model.NewErrorResponse(fiber.StatusBadRequest, errorMessage, details)
-	}
-
-	//check phone uniqueness
-	count, err := s.SalesRepository.CountByPhone(tx, request.Phone)
-	if err != nil {
-		s.Log.Warnf("Failed check phone to database : %+v", err)
-		return nil, fiber.ErrInternalServerError
-	}
-
-	if count > 0 {
-		s.Log.Warnf("Phone already exists : %s", request.Phone)
-		errorMessage := fmt.Sprintf("Nomor HP %s sudah digunakan", request.Phone)
-		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
-	}
-
-	var Routes []entity.Route
-	//  validate routes
-	if request.RouteIDs != nil {
-		DbRoutes, err := s.RouteRepository.FindByArryId(tx, request.RouteIDs)
-		if err != nil {
-			s.Log.Warnf("Failed find route to database : %+v", err)
-			return nil, fiber.ErrInternalServerError
-		}
-
-		foundRoutes := make(map[uint]bool)
-		for _, route := range DbRoutes {
-			foundRoutes[uint(route.ID)] = true
-		}
-
-		// check if all routes exist
-		var missingRoutes []int
-		for _, requestedID := range request.RouteIDs {
-			if !foundRoutes[uint(requestedID)] {
-				missingRoutes = append(missingRoutes, requestedID)
-			}
-		}
-
-		if len(missingRoutes) > 0 {
-			s.Log.Warnf("Routes not found : %v", missingRoutes)
-			errorMessage := fmt.Sprintf("Route dengan ID %v tidak ditemukan", missingRoutes)
-			return nil, fiber.NewError(fiber.StatusNotFound, errorMessage)
-		}
-
-		// set routes
-		Routes = make([]entity.Route, len(request.RouteIDs))
-		for i, v := range request.RouteIDs {
-			Routes[i] = entity.Route{ID: v}
-		}
-
-	}
-
-	//set sales
-	sales := &entity.Sales{
-		EmployeeId: request.EmployeeId,
-		Phone:      request.Phone,
-		Routes:     Routes,
-	}
-
-	if err := s.SalesRepository.Create(tx, sales); err != nil {
-		s.Log.Warnf("Failed create sales to database : %+v", err)
-		return nil, fiber.ErrInternalServerError
-	}
-
-	//commit
-	if err := tx.Commit().Error; err != nil {
-		s.Log.WithFields(logrus.Fields{
-			"employeeId": request.EmployeeId,
-		}).Warnf("Failed commit to database : %+v", err)
-		return nil, fiber.ErrInternalServerError
-	}
-
-	return converter.ToSalesResponse(sales), nil
 }
 
 func (s *SalesUseCaseImpl) FindAll(ctx context.Context, request *model.FindAllSalesRequest) ([]model.SalesResponse, int64, error) {
@@ -232,27 +150,30 @@ func (s *SalesUseCaseImpl) Update(ctx context.Context, request *model.UpdateSale
 		}
 	}
 
-	//set sales
-	sales := &entity.Sales{
-		ID:         request.ID,
-		EmployeeId: request.EmployeeId,
-		Phone:      request.Phone,
+	// update sales
+	DbSales.Phone = request.Phone
+	DbSales.Employee.Name = request.Name
+
+	if err := s.SalesRepository.Update(tx, DbSales); err != nil {
+		s.Log.Warnf("Failed update sales to database : %+v", err)
+		return nil, fiber.ErrInternalServerError
 	}
 
-	if err := s.SalesRepository.Update(tx, sales); err != nil {
-		s.Log.Warnf("Failed update sales to database : %+v", err)
+	if err := s.EmployeeRepository.Update(tx, &entity.Employee{ID: DbSales.EmployeeId, Name: request.Name}); err != nil {
+		s.Log.Warnf("Failed update sales name to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
 	//commit
 	if err := tx.Commit().Error; err != nil {
 		s.Log.WithFields(logrus.Fields{
-			"EmployeeId": request.EmployeeId,
+			"sales_id": request.ID,
+			"name":     request.Name,
 		}).Warnf("Failed commit to database : %+v", err)
 		return nil, fiber.ErrInternalServerError
 	}
 
-	return converter.ToSalesResponse(sales), nil
+	return converter.ToSalesResponse(DbSales), nil
 }
 
 func (s *SalesUseCaseImpl) Delete(ctx context.Context, request *model.DeleteSalesRequest) error {
@@ -280,6 +201,11 @@ func (s *SalesUseCaseImpl) Delete(ctx context.Context, request *model.DeleteSale
 
 	if err := s.SalesRepository.Delete(tx, request.ID); err != nil {
 		s.Log.WithError(err).Error("error deleting Sales")
+		return fiber.ErrInternalServerError
+	}
+
+	if err := s.EmployeeRepository.Delete(tx, DbSales.Employee.ID); err != nil {
+		s.Log.WithError(err).Error("error deleting employee")
 		return fiber.ErrInternalServerError
 	}
 

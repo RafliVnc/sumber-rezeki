@@ -34,15 +34,7 @@ func (r *employeeRepositoryImpl) Create(db *gorm.DB, employee *entity.Employee) 
 }
 
 func (r *employeeRepositoryImpl) Update(db *gorm.DB, employee *entity.Employee) error {
-	updates := map[string]interface{}{
-		"name":          employee.Name,
-		"salary":        employee.Salary,
-		"role":          employee.Role,
-		"join_date":     employee.JoinDate,
-		"supervisor_id": employee.SupervisorId,
-	}
-
-	return db.Model(&entity.Employee{ID: employee.ID}).Updates(updates).Error
+	return db.Model(&entity.Employee{ID: employee.ID}).Updates(employee).Error
 }
 
 func (r *employeeRepositoryImpl) Delete(db *gorm.DB, id int) error {

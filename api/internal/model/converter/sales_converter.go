@@ -8,10 +8,9 @@ import (
 func ToSalesResponse(sales *entity.Sales) *model.SalesResponse {
 
 	return &model.SalesResponse{
-		ID:         sales.ID,
-		Phone:      sales.Phone,
-		CreatedAt:  sales.CreatedAt,
-		EmployeeId: &sales.EmployeeId,
-		Employee:   &model.EmployeeResponse{Name: sales.Employee.Name},
+		ID:        sales.ID,
+		Phone:     sales.Phone,
+		CreatedAt: sales.CreatedAt,
+		Employee:  model.EmployeeResponse{ID: sales.Employee.ID, Name: sales.Employee.Name},
 	}
 }

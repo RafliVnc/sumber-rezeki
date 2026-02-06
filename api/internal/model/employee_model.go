@@ -5,9 +5,9 @@ import "api/internal/entity/enum"
 type EmployeeResponse struct {
 	ID           int                          `json:"id,omitempty"`
 	Name         string                       `json:"name"`
-	Salary       float64                      `json:"salary"`
+	Salary       float64                      `json:"salary,omitempty"`
 	SupervisorId *int                         `json:"supervisorId,omitempty"`
-	Role         string                       `json:"role"`
+	Role         string                       `json:"role,omitempty"`
 	Sales        *SalesResponse               `json:"Sales,omitempty"`
 	Attendaces   []EmployeeAttendanceResponse `json:"Attendaces,omitempty"`
 }

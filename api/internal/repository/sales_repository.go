@@ -7,10 +7,11 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type SalesRepository interface {
-	Create(db *gorm.DB, sales *entity.Sales) error
+	Upsert(db *gorm.DB, sales *entity.Sales) error
 	Update(db *gorm.DB, sales *entity.Sales) error
 	Delete(db *gorm.DB, id int) error
 	DeleteByEmployeeId(db *gorm.DB, id int) error
@@ -31,8 +32,17 @@ func NewSalesRepository(log *logrus.Logger) SalesRepository {
 	}
 }
 
-func (r *salesRepositoryImpl) Create(db *gorm.DB, sales *entity.Sales) error {
-	return db.Create(sales).Error
+func (r *salesRepositoryImpl) Upsert(db *gorm.DB, sales *entity.Sales) error {
+	return db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "employee_id"},
+		},
+		DoUpdates: clause.Assignments(map[string]interface{}{
+			"phone":      gorm.Expr("EXCLUDED.phone"),
+			"updated_at": gorm.Expr("EXCLUDED.updated_at"),
+			"deleted_at": nil,
+		}),
+	}).Create(sales).Error
 }
 
 func (r *salesRepositoryImpl) Update(db *gorm.DB, sales *entity.Sales) error {
@@ -43,29 +53,18 @@ func (r *salesRepositoryImpl) Delete(db *gorm.DB, id int) error {
 	return db.Delete(&entity.Sales{}, id).Error
 }
 
-func (r *salesRepositoryImpl) DeleteByEmployeeId(db *gorm.DB, id int) error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		var sales entity.Sales
-
-		// Cari sales berdasarkan employee_id
-		if err := tx.Where("employee_id = ?", id).First(&sales).Error; err != nil {
-			return err
-		}
-
-		// Hapus semua relasi di sales_routes (hard delete)
-		if err := tx.Model(&sales).Association("Routes").Clear(); err != nil {
-			return err
-		}
-
-		// Soft delete sales
-		return tx.Unscoped().Where("employee_id = ?", id).Delete(&entity.Sales{}).Error
-	})
+// TODO: check if delete cascase is worked
+func (r *salesRepositoryImpl) DeleteByEmployeeId(db *gorm.DB, employeeID int) error {
+	return db.
+		Where("employee_id = ?", employeeID).
+		Delete(&entity.Sales{}).
+		Error
 }
 
 func (r *salesRepositoryImpl) FindById(db *gorm.DB, id int) (*entity.Sales, error) {
 	var sales entity.Sales
 
-	err := db.First(&sales, id).Error
+	err := db.Preload("Employee").First(&sales, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil

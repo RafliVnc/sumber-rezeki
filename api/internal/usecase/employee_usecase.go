@@ -25,7 +25,6 @@ type EmployeeUseCase interface {
 	FindById(ctx context.Context, request *model.FindByIdEmployeeRequest) (*model.EmployeeResponse, error)
 	validateAndGetRoutes(tx *gorm.DB, routeIDs []int) ([]entity.Route, error)
 	FindAllWithAttendances(ctx context.Context, request *model.FindAllEmployeeWithAttendanceRequest) ([]model.EmployeeResponse, error)
-	// TODO FindEmployeeAttendace
 }
 
 type EmployeeUseCaseImpl struct {
@@ -106,6 +105,7 @@ func (u *EmployeeUseCaseImpl) Create(ctx context.Context, request *model.CreateE
 	}
 
 	// Create Sales if role is SALES (AFTER employee created)
+	// FIX: move this to sales usecase
 	if request.Role == enum.SALES {
 		var routes []entity.Route
 
@@ -150,7 +150,7 @@ func (u *EmployeeUseCaseImpl) Create(ctx context.Context, request *model.CreateE
 			Routes:     routes,
 		}
 
-		if err := u.SalesRepository.Create(tx, sales); err != nil {
+		if err := u.SalesRepository.Upsert(tx, sales); err != nil {
 			u.Log.Warnf("Failed create sales to database : %+v", err)
 			return nil, fiber.ErrInternalServerError
 		}
@@ -249,13 +249,14 @@ func (u *EmployeeUseCaseImpl) Update(ctx context.Context, request *model.UpdateE
 			Routes:     routes,
 		}
 
-		if err := u.SalesRepository.Create(tx, sales); err != nil {
+		if err := u.SalesRepository.Upsert(tx, sales); err != nil {
 			u.Log.Warnf("Failed create sales to database : %+v", err)
 			return nil, fiber.ErrInternalServerError
 		}
 
 	case oldRole == enum.SALES && newRole == enum.SALES:
 		// SALES → SALES: Update existing sales record
+		// FIX: move this to sales usecase
 		sales, err := u.SalesRepository.FindByEmployeeId(tx, employee.ID)
 		if err != nil {
 			u.Log.Warnf("Failed find sales record : %+v", err)
@@ -303,6 +304,7 @@ func (u *EmployeeUseCaseImpl) Update(ctx context.Context, request *model.UpdateE
 	return converter.ToEmployeeResponse(employee), nil
 }
 
+// FIX: move this to sales usecase
 func (u *EmployeeUseCaseImpl) validateAndGetRoutes(tx *gorm.DB, routeIDs []int) ([]entity.Route, error) {
 	dbRoutes, err := u.RouteRepository.FindByArryId(tx, routeIDs)
 	if err != nil {
