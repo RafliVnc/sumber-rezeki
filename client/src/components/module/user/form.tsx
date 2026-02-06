@@ -70,7 +70,7 @@ export default function FormUser({
     z.infer<typeof UserValidation.CREATE | typeof UserValidation.UPDATE>
   >({
     resolver: zodResolver(
-      isEdit ? UserValidation.UPDATE : UserValidation.CREATE
+      isEdit ? UserValidation.UPDATE : UserValidation.CREATE,
     ),
     defaultValues: isEdit ? dummyFormUser : { ...dummyFormUser, password: "" },
   });
@@ -89,7 +89,9 @@ export default function FormUser({
   });
 
   const onSubmit = (
-    values: z.infer<typeof UserValidation.CREATE | typeof UserValidation.UPDATE>
+    values: z.infer<
+      typeof UserValidation.CREATE | typeof UserValidation.UPDATE
+    >,
   ) => {
     submitMutation.mutate({ values, isEdit, id: user?.id });
   };

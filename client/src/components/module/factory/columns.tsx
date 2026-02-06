@@ -9,31 +9,36 @@ export const columns = ({
   handleEdit,
   handleDelete,
 }: {
-  handleEdit: (value: Sales) => void;
+  handleEdit: (value: Factory) => void;
   handleDelete: (id: number, name: string) => void;
-}): ColumnDef<Sales>[] => [
+}): ColumnDef<Factory>[] => [
   {
     accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      const sales = row.original;
-      return (
-        <div className="flex items-center gap-2">
-          <span>{sales.Employee.name}</span>
-        </div>
-      );
-    },
+    header: "Nama",
   },
   {
     accessorKey: "phone",
     header: "No. HP",
   },
   {
+    accessorKey: "description",
+    header: "Deskripsi",
+    cell: ({ row }) => {
+      return (
+        <div className="w-full">
+          <p className="line-clamp-3 !whitespace-normal">
+            {row.original.description || "-"}
+          </p>
+        </div>
+      );
+    },
+  },
+  {
     id: "actions",
     header: "Aksi",
-    maxSize: 20,
+    maxSize: 80,
     cell: ({ row }) => {
-      const sales = row.original;
+      const routes = row.original;
 
       return (
         <div className="flex gap-1 ">
@@ -41,7 +46,7 @@ export const columns = ({
             variant="ghost"
             className="size-6"
             onClick={() => {
-              handleEdit(sales);
+              handleEdit(routes);
             }}
           >
             <Pencil />
@@ -50,7 +55,7 @@ export const columns = ({
             variant="ghost"
             className="size-6"
             onClick={() => {
-              handleDelete(sales.id, sales.Employee.name);
+              handleDelete(routes.id, routes.name);
             }}
           >
             <Trash2 className="text-red-500" />

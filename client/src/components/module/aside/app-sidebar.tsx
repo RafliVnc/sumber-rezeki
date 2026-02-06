@@ -31,8 +31,8 @@ const data = {
     },
     {
       title: "Kilang",
-      url: "/factories",
-      activePath: "/factories",
+      url: "/factory",
+      activePath: "/factory",
       icon: Waypoints,
     },
     {

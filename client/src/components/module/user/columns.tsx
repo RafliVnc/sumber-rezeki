@@ -47,8 +47,8 @@ export const columns = ({
             row.original.role === UserRole.OWNER
               ? "blue"
               : row.original.role === UserRole.WAREHOUSE_HEAD
-              ? "green"
-              : "purple"
+                ? "green"
+                : "purple"
           }
         >
           {ConvertUserRole(row.original.role)}
@@ -59,6 +59,7 @@ export const columns = ({
   {
     id: "actions",
     header: "Aksi",
+    maxSize: 80,
     cell: ({ row }) => {
       const user = row.original;
 

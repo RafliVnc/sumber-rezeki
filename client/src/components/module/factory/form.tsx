@@ -1,9 +1,10 @@
 "use client";
 
+import { FactoryDummy } from "@/dummy/factory-dummy";
 import { api } from "@/lib/api";
-import { SalesValidation } from "@/validation/sales-validation";
+import { FactoryValidation } from "@/validation/factory-validation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -16,25 +17,23 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { SalesDummy } from "@/dummy/sales-dummy";
-import { MultiSelect } from "@/components/ui/multiple-select";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import Required from "@/components/ui/required";
 
-// TODO: Refactor delete Post request
-const apiFormSales = async ({
+const ApiFormFactory = async ({
   values,
   isEdit,
   id,
 }: {
-  values: z.infer<typeof SalesValidation.MAIN>;
+  values: z.infer<typeof FactoryValidation.MAIN>;
   isEdit?: boolean;
   id?: number;
-}): Promise<{ data: Sales }> => {
-  const res = await api<{ data: Sales }>({
-    url: isEdit ? `sales/${id}` : "sales",
+}) => {
+  const res = await api<{ data: Factory }>({
+    url: isEdit ? `factories/${id}` : "factories",
     method: isEdit ? "PUT" : "POST",
     body: values,
   });
@@ -42,69 +41,49 @@ const apiFormSales = async ({
   return res;
 };
 
-const apiGetRoute = async (): Promise<{ data: Route[] }> => {
-  const res = await api<{ data: Route[] }>({
-    url: "routes",
-    method: "GET",
-  });
-
-  return res;
-};
-
-export default function FormSales({
+export default function FormFactory({
+  factory,
   handleClose,
-  sales,
 }: {
+  factory?: Factory;
   handleClose: () => void;
-  sales?: Sales;
 }) {
   const queryClient = useQueryClient();
-  const isEdit = !!sales;
+  const isEdit = !!factory;
 
-  const dummyFormSales: z.infer<typeof SalesValidation.MAIN> = {
-    name: sales?.Employee.name || SalesDummy.Employee.name,
-    phone: sales?.phone || SalesDummy.phone,
-    routeIds: sales?.Routes?.map((r) => r.id) || [],
+  const dummyFormFactory: z.infer<typeof FactoryValidation.MAIN> = {
+    name: factory?.name || FactoryDummy.name,
+    phone: factory?.phone || FactoryDummy.phone,
+    dueDate: factory?.dueDate || FactoryDummy.dueDate,
+    description: factory?.description || FactoryDummy.description,
   };
 
-  const { data: routes, isLoading } = useQuery({
-    queryKey: ["form-sales-routes"],
-    queryFn: apiGetRoute,
-  });
-
-  const routeList =
-    routes?.data?.map((r) => ({
-      value: r.id.toString(),
-      label: r.name,
-    })) || [];
-
-  const form = useForm<z.infer<typeof SalesValidation.MAIN>>({
-    resolver: zodResolver(SalesValidation.MAIN),
-    defaultValues: dummyFormSales,
+  const form = useForm<z.infer<typeof FactoryValidation.MAIN>>({
+    resolver: zodResolver(FactoryValidation.MAIN),
+    defaultValues: dummyFormFactory,
   });
 
   const submitMutation = useMutation({
-    mutationFn: apiFormSales,
+    mutationFn: ApiFormFactory,
     onSuccess: () => {
-      toast.success(`Sales berhasil ${isEdit ? "diubah" : "ditambahkan"}`);
-      queryClient.invalidateQueries({ queryKey: ["sales"] });
+      toast.success(`Kilang berhasil ${isEdit ? "diubah" : " ditambahkan"}`);
+      queryClient.invalidateQueries({ queryKey: ["factories"] });
       form.reset();
       handleClose();
     },
     onError: (error: Error) => {
-      toast.error(error?.message || "Gagal menambahkan sales");
+      toast.error(error?.message || "Gagal menambahkan kilang");
     },
   });
 
-  const onSubmit = (values: z.infer<typeof SalesValidation.MAIN>) => {
-    submitMutation.mutate({ values, isEdit, id: sales?.id });
+  const onSubmit = (values: z.infer<typeof FactoryValidation.MAIN>) => {
+    submitMutation.mutate({ values, isEdit, id: factory?.id });
   };
-
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col justify-between h-full px-4 pb-4"
+        className="flex flex-col gap-4 h-full px-4 pb-4"
       >
         <div className="space-y-4">
           <FormField
@@ -112,9 +91,36 @@ export default function FormSales({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <Required children={"Nama"} />
+                <FormLabel>
+                  <Required children={"Nama"} />
+                </FormLabel>
                 <FormControl>
                   <Input type="text" placeholder="Nama" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="dueDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  <Required children={"Jatuh Tempo (Hari)"} />
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    placeholder="Ketik hari"
+                    value={field.value || ""}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, "");
+                      const numericValue = Number(raw || 0);
+
+                      field.onChange(numericValue);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -148,18 +154,15 @@ export default function FormSales({
           />
           <FormField
             control={form.control}
-            name="routeIds"
+            name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Rute</FormLabel>
+                <FormLabel>Deskripsi</FormLabel>
                 <FormControl>
-                  <MultiSelect
-                    options={routeList}
-                    maxCount={6}
-                    isLoading={isLoading}
-                    defaultValue={field.value ? field.value.map(String) : []}
-                    onValueChange={(val) => field.onChange(val.map(Number))}
-                    placeholder="Pilih rute"
+                  <Textarea
+                    placeholder="Deskripsi"
+                    className="min-h-40"
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
