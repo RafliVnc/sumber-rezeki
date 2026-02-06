@@ -27,8 +27,13 @@ type EmployeeAttendanceUseCaseImpl struct {
 	PeriodUsecase                PeriodUseCase
 }
 
-func NewEmployeeAttendanceUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate,
-	employeeRepository repository.EmployeeAttendanceRepository, periodUsecase PeriodUseCase) EmployeeAttendanceUseCase {
+func NewEmployeeAttendanceUseCase(
+	db *gorm.DB,
+	logger *logrus.Logger,
+	validate *validator.Validate,
+	employeeRepository repository.EmployeeAttendanceRepository,
+	periodUsecase PeriodUseCase,
+) EmployeeAttendanceUseCase {
 	return &EmployeeAttendanceUseCaseImpl{
 		DB:                           db,
 		Log:                          logger,

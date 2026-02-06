@@ -29,7 +29,13 @@ type RouteUseCaseImpl struct {
 	RouteRepository repository.RouteRepository
 }
 
-func NewRouteUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate, routesRepository repository.RouteRepository, routeRepository repository.RouteRepository) RouteUseCase {
+func NewRouteUseCase(
+	db *gorm.DB,
+	logger *logrus.Logger,
+	validate *validator.Validate,
+	routesRepository repository.RouteRepository,
+	routeRepository repository.RouteRepository,
+) RouteUseCase {
 	return &RouteUseCaseImpl{
 		DB:              db,
 		Log:             logger,

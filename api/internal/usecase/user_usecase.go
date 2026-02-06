@@ -35,8 +35,13 @@ type UserUseCaseImpl struct {
 	TokenUtil      *utils.TokenUtil
 }
 
-func NewUserUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate,
-	userRepository repository.UserRepository, tokenUtil *utils.TokenUtil) UserUseCase {
+func NewUserUseCase(
+	db *gorm.DB,
+	logger *logrus.Logger,
+	validate *validator.Validate,
+	userRepository repository.UserRepository,
+	tokenUtil *utils.TokenUtil,
+) UserUseCase {
 	return &UserUseCaseImpl{
 		DB:             db,
 		Log:            logger,

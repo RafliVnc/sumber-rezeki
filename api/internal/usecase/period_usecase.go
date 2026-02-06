@@ -25,8 +25,12 @@ type PeriodUseCaseImpl struct {
 	PeriodRepository repository.PeriodRepository
 }
 
-func NewPeriodUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate,
-	employeeRepository repository.PeriodRepository) PeriodUseCase {
+func NewPeriodUseCase(
+	db *gorm.DB,
+	logger *logrus.Logger,
+	validate *validator.Validate,
+	employeeRepository repository.PeriodRepository,
+) PeriodUseCase {
 	return &PeriodUseCaseImpl{
 		DB:               db,
 		Log:              logger,

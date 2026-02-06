@@ -30,7 +30,14 @@ type SalesUseCaseImpl struct {
 	EmployeeRepository repository.EmployeeRepository
 }
 
-func NewSalesUseCase(db *gorm.DB, logger *logrus.Logger, validate *validator.Validate, salesRepository repository.SalesRepository, routeRepository repository.RouteRepository, employeeRepository repository.EmployeeRepository) SalesUseCase {
+func NewSalesUseCase(
+	db *gorm.DB,
+	logger *logrus.Logger,
+	validate *validator.Validate,
+	salesRepository repository.SalesRepository,
+	routeRepository repository.RouteRepository,
+	employeeRepository repository.EmployeeRepository,
+) SalesUseCase {
 	return &SalesUseCaseImpl{
 		DB:                 db,
 		Log:                logger,
