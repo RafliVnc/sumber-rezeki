@@ -37,8 +37,8 @@ const data = {
     },
     {
       title: "Kendaraan",
-      url: "/Vehicles",
-      activePath: "/Vehicles",
+      url: "/vehicle/tronton",
+      activePath: "/vehicle",
       icon: Truck,
     },
   ],

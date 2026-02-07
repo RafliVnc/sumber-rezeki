@@ -17,6 +17,7 @@ type RouteConfig struct {
 	EmployeeController           *http.EmployeeController
 	EmployeeAttendanceController *http.EmployeeAttendanceController
 	FactoryController            *http.FactoryController
+	VehicleController            *http.VehicleController
 	AuthMiddleware               fiber.Handler
 	Config                       *viper.Viper
 }
@@ -39,39 +40,54 @@ func (c *RouteConfig) SetupGuestRoute() {
 func (c *RouteConfig) SetupAuthRoute() {
 	c.App.Use(c.AuthMiddleware)
 
-	//user
-	c.App.Get("/api/hello", c.HelloController.SayHello)
 	c.App.Get("/api/current", c.UserController.Current)
-	c.App.Get("/api/users", c.UserController.FindAll)
-	c.App.Post("/api/users", c.UserController.Register)
-	c.App.Put("/api/users/:id", c.UserController.Update)
-	c.App.Delete("/api/users/:id", c.UserController.Delete)
+	// hello
+	c.App.Get("/api/hello", c.HelloController.SayHello)
+
+	// user
+	users := c.App.Group("/api/users")
+	users.Get("/", c.UserController.FindAll)
+	users.Post("/", c.UserController.Register)
+	users.Put("/:id", c.UserController.Update)
+	users.Delete("/:id", c.UserController.Delete)
 
 	// sales
-	c.App.Get("/api/sales", c.SalesController.FindAll)
-	c.App.Put("/api/sales/:id", c.SalesController.Update)
-	c.App.Delete("/api/sales/:id", c.SalesController.Delete)
+	sales := c.App.Group("/api/sales")
+	sales.Get("/", c.SalesController.FindAll)
+	sales.Put("/:id", c.SalesController.Update)
+	sales.Delete("/:id", c.SalesController.Delete)
 
 	// route
-	c.App.Get("/api/routes", c.RouteController.FindAll)
-	c.App.Post("/api/routes", c.RouteController.Create)
-	c.App.Put("/api/routes/:id", c.RouteController.Update)
-	c.App.Delete("/api/routes/:id", c.RouteController.Delete)
+	routes := c.App.Group("/api/routes")
+	routes.Get("/", c.RouteController.FindAll)
+	routes.Post("/", c.RouteController.Create)
+	routes.Put("/:id", c.RouteController.Update)
+	routes.Delete("/:id", c.RouteController.Delete)
 
 	// employee
-	c.App.Get("/api/employees", c.EmployeeController.FindAll)
-	c.App.Get("/api/employees/:id", c.EmployeeController.FindById)
-	c.App.Post("/api/employees", c.EmployeeController.Create)
-	c.App.Put("/api/employees/:id", c.EmployeeController.Update)
-	c.App.Delete("/api/employees/:id", c.EmployeeController.Delete)
+	employees := c.App.Group("/api/employees")
+	employees.Get("/", c.EmployeeController.FindAll)
+	employees.Get("/:id", c.EmployeeController.FindById)
+	employees.Post("/", c.EmployeeController.Create)
+	employees.Put("/:id", c.EmployeeController.Update)
+	employees.Delete("/:id", c.EmployeeController.Delete)
 
-	// Attendace
-	c.App.Get("/api/attendance", c.EmployeeController.FindAllWithAttendances)
-	c.App.Post("/api/attendance/batch", c.EmployeeAttendanceController.Upsert)
+	// attendance
+	attendance := c.App.Group("/api/attendance")
+	attendance.Get("/", c.EmployeeController.FindAllWithAttendances)
+	attendance.Post("/batch", c.EmployeeAttendanceController.Upsert)
 
 	// factory
-	c.App.Get("/api/factories", c.FactoryController.FindAll)
-	c.App.Post("/api/factories", c.FactoryController.Create)
-	c.App.Put("/api/factories/:id", c.FactoryController.Update)
-	c.App.Delete("/api/factories/:id", c.FactoryController.Delete)
+	factories := c.App.Group("/api/factories")
+	factories.Get("/", c.FactoryController.FindAll)
+	factories.Post("/", c.FactoryController.Create)
+	factories.Put("/:id", c.FactoryController.Update)
+	factories.Delete("/:id", c.FactoryController.Delete)
+
+	// factory
+	vehicles := c.App.Group("/api/vehicles")
+	vehicles.Get("/", c.VehicleController.FindAll)
+	vehicles.Post("/", c.VehicleController.Create)
+	vehicles.Put("/:id", c.VehicleController.Update)
+	vehicles.Delete("/:id", c.VehicleController.Delete)
 }

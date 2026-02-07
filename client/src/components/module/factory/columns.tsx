@@ -38,7 +38,7 @@ export const columns = ({
     header: "Aksi",
     maxSize: 80,
     cell: ({ row }) => {
-      const routes = row.original;
+      const factory = row.original;
 
       return (
         <div className="flex gap-1 ">
@@ -46,7 +46,7 @@ export const columns = ({
             variant="ghost"
             className="size-6"
             onClick={() => {
-              handleEdit(routes);
+              handleEdit(factory);
             }}
           >
             <Pencil />
@@ -55,7 +55,7 @@ export const columns = ({
             variant="ghost"
             className="size-6"
             onClick={() => {
-              handleDelete(routes.id, routes.name);
+              handleDelete(factory.id, factory.name);
             }}
           >
             <Trash2 className="text-red-500" />

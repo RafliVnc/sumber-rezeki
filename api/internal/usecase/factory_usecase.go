@@ -160,19 +160,6 @@ func (s *FactoryUseCaseImpl) Update(ctx context.Context, request *model.UpdateFa
 		return nil, err
 	}
 
-	//check phone uniqueness
-	phoneCount, err := s.FactoryRepository.CountByPhone(tx, request.Phone)
-	if err != nil {
-		s.Log.Warnf("Failed check phone to database : %+v", err)
-		return nil, fiber.ErrInternalServerError
-	}
-
-	if phoneCount > 0 && factory.Phone != request.Phone {
-		s.Log.Warnf("Phone already exists : %s", request.Phone)
-		errorMessage := fmt.Sprintf("Nomor HP %s sudah digunakan", request.Phone)
-		return nil, fiber.NewError(fiber.StatusBadRequest, errorMessage)
-	}
-
 	//set factory
 	updateFactory := &entity.Factory{
 		ID:          factory.ID,

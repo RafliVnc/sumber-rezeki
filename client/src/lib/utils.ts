@@ -1,5 +1,6 @@
 import { EmployeeRole } from "@/type/enum/employee-role";
 import { UserRole } from "@/type/enum/user-role";
+import { VehicleType } from "@/type/enum/vehicle-type";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -35,6 +36,21 @@ export const ConvertEmployeeRole = (role: EmployeeRole) => {
     case EmployeeRole.STAFF:
       return "Orang Gudang";
   }
+};
+
+export const ConvertVehicleType = (role: VehicleType) => {
+  switch (role) {
+    case VehicleType.PICKUP:
+      return "Pickup";
+    case VehicleType.TRONTON:
+      return "Tronton";
+    case VehicleType.TRUCK:
+      return "Truck";
+  }
+};
+
+export const ConvertToPlate = (plate: string) => {
+  return plate.replace(/^([A-Z]{1,2})(\d{1,4})([A-Z]{1,3})$/, "$1 $2 $3");
 };
 
 export const ConvertStatusLabel = (status: AttendanceStatus | null): string => {
